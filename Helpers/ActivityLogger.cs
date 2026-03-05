@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AxfsExplorer;
+namespace AxfsExplorer.Helpers;
 
 record ActivityEntry(DateTime Time, string Category, string Message);
 
@@ -15,11 +15,13 @@ class ActivityLogger
     {
         var e = new ActivityEntry(DateTime.Now, category, message);
         _entries.Add(e);
-        if (_entries.Count > 500) _entries.RemoveAt(0);
+        if (_entries.Count > 500)
+            _entries.RemoveAt(0);
         EntryAdded?.Invoke(e);
     }
 
     public IReadOnlyList<ActivityEntry> Entries => _entries;
+
     public void Clear() => _entries.Clear();
 
     public string Format()

@@ -8,7 +8,9 @@ namespace AxfsExplorer;
 public class AppSettings
 {
     static readonly string Dir = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxfsExplorer");
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "AxfsExplorer"
+    );
     static readonly string FilePath = Path.Combine(Dir, "settings.json");
 
     public string Theme { get; set; } = "Dark";
@@ -48,7 +50,8 @@ public class AppSettings
     {
         RecentFiles.Remove(path);
         RecentFiles.Insert(0, path);
-        if (RecentFiles.Count > 10) RecentFiles.RemoveRange(10, RecentFiles.Count - 10);
+        if (RecentFiles.Count > 10)
+            RecentFiles.RemoveRange(10, RecentFiles.Count - 10);
         Save();
     }
 
@@ -68,24 +71,38 @@ public class AppSettings
         try
         {
             Directory.CreateDirectory(Dir);
-            File.WriteAllText(FilePath,
-                JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+            File.WriteAllText(
+                FilePath,
+                JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true })
+            );
         }
         catch { }
     }
 
     public void Reset()
     {
-        Theme = "Dark"; WindowWidth = 1200; WindowHeight = 750;
-        ConfirmDelete = true; AutoSave = true;
-        DefaultVolumeLabel = "AxisFS"; DefaultImageSizeKB = 512;
-        SyntaxHighlighting = true; ShowLineNumbers = true;
-        EditorFontSize = 13; LuaLspEnabled = false;
-        GeneralSoundsEnabled = true; BeepSoundsEnabled = true;
-        MasterVolume = 80; GeneralMuted = false; BeepMuted = false;
-        PreviewPaneVisible = false; ActivityLogVisible = false;
-        SortColumn = "Name"; SortAscending = true;
-        RecentFiles = new(); Bookmarks = new();
+        Theme = "Dark";
+        WindowWidth = 1200;
+        WindowHeight = 750;
+        ConfirmDelete = true;
+        AutoSave = true;
+        DefaultVolumeLabel = "AxisFS";
+        DefaultImageSizeKB = 512;
+        SyntaxHighlighting = true;
+        ShowLineNumbers = true;
+        EditorFontSize = 13;
+        LuaLspEnabled = false;
+        GeneralSoundsEnabled = true;
+        BeepSoundsEnabled = true;
+        MasterVolume = 80;
+        GeneralMuted = false;
+        BeepMuted = false;
+        PreviewPaneVisible = false;
+        ActivityLogVisible = false;
+        SortColumn = "Name";
+        SortAscending = true;
+        RecentFiles = new();
+        Bookmarks = new();
         Save();
     }
 }

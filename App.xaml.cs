@@ -1,4 +1,5 @@
-﻿using Microsoft.UI.Xaml;
+﻿using AxfsExplorer.Helpers;
+using Microsoft.UI.Xaml;
 
 namespace AxfsExplorer;
 

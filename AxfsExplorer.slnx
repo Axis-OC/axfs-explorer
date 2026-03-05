@@ -5,9 +5,8 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="AxfsExplorer.csproj">
-    <Platform Solution="*|ARM64" Project="ARM64" />
-    <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="*|x86" Project="x86" />
+    <BuildType Solution="Release|x64" Project="Debug" />
+    <Platform Project="x64" />
     <Deploy />
   </Project>
 </Solution>

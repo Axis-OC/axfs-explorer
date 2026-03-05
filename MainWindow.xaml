@@ -1,1098 +1,1900 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window x:Class="AxfsExplorer.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="using:AxfsExplorer"
-        Title="AXFS Explorer">
+<Window
+  x:Class="AxfsExplorer.MainWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:local="using:AxfsExplorer"
+  Title="AXFS Explorer"
+>
+  <Grid x:Name="RootGrid" Background="Transparent">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="48" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
 
-    <Grid x:Name="RootGrid" Background="Transparent">
+    <!-- ════════ ACCENT STRIPS ════════ -->
+    <Border
+      Grid.Row="0"
+      Grid.RowSpan="2"
+      VerticalAlignment="Top"
+      Height="2"
+      Background="{StaticResource AccentGradientBrush}"
+      Canvas.ZIndex="100"
+    />
+    <Border
+      Grid.Row="0"
+      Grid.RowSpan="2"
+      VerticalAlignment="Top"
+      Height="120"
+      Background="{StaticResource AccentGradientVertical}"
+      Canvas.ZIndex="0"
+      Opacity="0.25"
+      IsHitTestVisible="False"
+    />
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="48"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <!-- ════════ COMMAND PALETTE OVERLAY ════════ -->
+    <Grid x:Name="CmdPaletteOverlay" Visibility="Collapsed" Canvas.ZIndex="200">
+      <Border Background="#60000000" Tapped="OnCmdPaletteDismiss" />
+      <Border
+        HorizontalAlignment="Center"
+        VerticalAlignment="Top"
+        Margin="0,80,0,0"
+        Width="560"
+        CornerRadius="12"
+        Padding="0"
+        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+        BorderThickness="1"
+      >
+        <StackPanel>
+          <TextBox
+            x:Name="CmdPaletteInput"
+            PlaceholderText="Type a command…"
+            Margin="12,12,12,4"
+            CornerRadius="8"
+            FontSize="14"
+            TextChanged="OnCmdPaletteTextChanged"
+            KeyDown="OnCmdPaletteKeyDown"
+          />
+          <ListView
+            x:Name="CmdPaletteResults"
+            MaxHeight="380"
+            Padding="4"
+            SelectionMode="Single"
+            IsItemClickEnabled="True"
+            ItemClick="OnCmdPaletteItemClick"
+          />
+        </StackPanel>
+      </Border>
+    </Grid>
 
-        <!-- ════════ ACCENT STRIPS ════════ -->
-        <Border Grid.Row="0" Grid.RowSpan="2" VerticalAlignment="Top" Height="2"
-                Background="{StaticResource AccentGradientBrush}" Canvas.ZIndex="100"/>
-        <Border Grid.Row="0" Grid.RowSpan="2" VerticalAlignment="Top" Height="120"
-                Background="{StaticResource AccentGradientVertical}" Canvas.ZIndex="0"
-                Opacity="0.25" IsHitTestVisible="False"/>
+    <!-- ════════ TITLE BAR ════════ -->
+    <Grid x:Name="AppTitleBar" Grid.Row="0" Background="Transparent" Canvas.ZIndex="50">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <StackPanel
+        Orientation="Horizontal"
+        Spacing="12"
+        Margin="16,0,0,0"
+        VerticalAlignment="Center"
+      >
+        <Border Width="26" Height="26" CornerRadius="7">
+          <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+              <GradientStop Color="#FF7C5CE7" Offset="0" />
+              <GradientStop Color="#FF3B82F6" Offset="1" />
+            </LinearGradientBrush>
+          </Border.Background>
+          <FontIcon
+            Glyph="&#xEDA2;"
+            FontSize="12"
+            Foreground="White"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+          />
+        </Border>
+        <TextBlock
+          x:Name="TitleBarText"
+          Text="AXFS Explorer"
+          FontSize="12"
+          FontWeight="SemiBold"
+          VerticalAlignment="Center"
+          Opacity="0.65"
+          IsHitTestVisible="False"
+          CharacterSpacing="20"
+        />
+      </StackPanel>
+      <StackPanel
+        Grid.Column="2"
+        Orientation="Horizontal"
+        Spacing="2"
+        Margin="0,0,140,0"
+        VerticalAlignment="Center"
+      >
+        <Button
+          Style="{StaticResource MuteButton}"
+          ToolTipService.ToolTip="Undo (Ctrl+Z)"
+          Click="OnUndo"
+          Opacity="0.45"
+        >
+          <FontIcon Glyph="&#xE7A7;" FontSize="12" />
+        </Button>
+        <Button
+          Style="{StaticResource MuteButton}"
+          ToolTipService.ToolTip="Redo (Ctrl+Y)"
+          Click="OnRedo"
+          Opacity="0.45"
+        >
+          <FontIcon Glyph="&#xE7A6;" FontSize="12" />
+        </Button>
+        <Border
+          Width="1"
+          Height="14"
+          Margin="4,0"
+          Background="{ThemeResource DividerStrokeColorDefaultBrush}"
+        />
+        <Button
+          Style="{StaticResource MuteButton}"
+          ToolTipService.ToolTip="Quick Open (Ctrl+O)"
+          Click="OnOpenImage"
+          Opacity="0.45"
+        >
+          <FontIcon Glyph="&#xE838;" FontSize="12" />
+        </Button>
+        <Button
+          Style="{StaticResource MuteButton}"
+          ToolTipService.ToolTip="Preview Pane"
+          Click="OnTogglePreviewPane"
+          Opacity="0.45"
+        >
+          <FontIcon x:Name="PreviewPaneIcon" Glyph="&#xE89F;" FontSize="12" />
+        </Button>
+        <Button
+          Style="{StaticResource MuteButton}"
+          ToolTipService.ToolTip="Toggle Theme"
+          Click="OnQuickThemeToggle"
+          Opacity="0.45"
+        >
+          <FontIcon x:Name="ThemeToggleIcon" Glyph="&#xE793;" FontSize="12" />
+        </Button>
+      </StackPanel>
+    </Grid>
 
-        <!-- ════════ COMMAND PALETTE OVERLAY ════════ -->
-        <Grid x:Name="CmdPaletteOverlay" Visibility="Collapsed" Canvas.ZIndex="200">
-            <Border Background="#60000000" Tapped="OnCmdPaletteDismiss"/>
-            <Border HorizontalAlignment="Center" VerticalAlignment="Top"
-                    Margin="0,80,0,0" Width="560" CornerRadius="12" Padding="0"
+    <!-- ════════ NAV VIEW ════════ -->
+    <NavigationView
+      x:Name="NavView"
+      Grid.Row="1"
+      PaneDisplayMode="Top"
+      IsBackButtonVisible="Collapsed"
+      IsSettingsVisible="True"
+      SelectionChanged="OnNavSelectionChanged"
+    >
+      <NavigationView.MenuItems>
+        <NavigationViewItem Content="Explorer" Tag="explorer" IsSelected="True">
+          <NavigationViewItem.Icon>
+            <FontIcon Glyph="&#xEC50;" />
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
+        <NavigationViewItem Content="Health" Tag="health">
+          <NavigationViewItem.Icon>
+            <FontIcon Glyph="&#xE9D9;" />
+          </NavigationViewItem.Icon>
+        </NavigationViewItem>
+      </NavigationView.MenuItems>
+
+      <Grid x:Name="ContentArea">
+        <!-- ════════ EXPLORER VIEW ════════ -->
+        <Grid x:Name="ExplorerView">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <!-- TAB STRIP -->
+          <Border
+            Grid.Row="0"
+            Padding="10,8,10,0"
+            Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,0,0,1"
+          >
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <ScrollViewer
+                HorizontalScrollBarVisibility="Auto"
+                VerticalScrollBarVisibility="Disabled"
+                HorizontalScrollMode="Auto"
+                VerticalScrollMode="Disabled"
+              >
+                <StackPanel x:Name="TabStripPanel" Orientation="Horizontal" Spacing="3" />
+              </ScrollViewer>
+              <Button
+                Grid.Column="1"
+                Click="OnAddTab"
+                Padding="8,4"
+                ToolTipService.ToolTip="New tab (Ctrl+T)"
+                Background="Transparent"
+                Margin="6,0,0,0"
+                CornerRadius="6"
+                Opacity="0.5"
+              >
+                <FontIcon Glyph="&#xE710;" FontSize="11" />
+                <Button.KeyboardAccelerators>
+                  <KeyboardAccelerator Key="T" Modifiers="Control" />
+                </Button.KeyboardAccelerators>
+              </Button>
+            </Grid>
+          </Border>
+
+          <InfoBar x:Name="NotificationBar" Grid.Row="1" IsOpen="False" IsClosable="True" />
+
+          <!-- TOOLBAR -->
+          <CommandBar
+            Grid.Row="2"
+            DefaultLabelPosition="Right"
+            IsOpen="False"
+            OverflowButtonVisibility="Auto"
+            Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}"
+          >
+            <AppBarButton Label="Open" Click="OnOpenImage" ToolTipService.ToolTip="Open (Ctrl+O)">
+              <AppBarButton.Icon>
+                <FontIcon Glyph="&#xE838;" />
+              </AppBarButton.Icon>
+              <AppBarButton.KeyboardAccelerators>
+                <KeyboardAccelerator Key="O" Modifiers="Control" />
+              </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarButton
+              Label="New"
+              Click="OnNewImage"
+              ToolTipService.ToolTip="Create new (Ctrl+N)"
+            >
+              <AppBarButton.Icon>
+                <FontIcon Glyph="&#xE710;" />
+              </AppBarButton.Icon>
+              <AppBarButton.KeyboardAccelerators>
+                <KeyboardAccelerator Key="N" Modifiers="Control" />
+              </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarButton
+              Icon="Save"
+              Label="Save"
+              Click="OnSave"
+              ToolTipService.ToolTip="Save (Ctrl+S)"
+            >
+              <AppBarButton.KeyboardAccelerators>
+                <KeyboardAccelerator Key="S" Modifiers="Control" />
+              </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarButton Label="Eject" Click="OnUnloadImage">
+              <AppBarButton.Icon>
+                <FontIcon
+                  Glyph="&#xF12B;"
+                  Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                />
+              </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarSeparator />
+            <AppBarButton Label="Up" Click="OnNavigateUp">
+              <AppBarButton.Icon>
+                <FontIcon Glyph="&#xE74A;" />
+              </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarButton Label="Refresh" Click="OnRefresh">
+              <AppBarButton.Icon>
+                <FontIcon Glyph="&#xE72C;" />
+              </AppBarButton.Icon>
+              <AppBarButton.KeyboardAccelerators>
+                <KeyboardAccelerator Key="F5" />
+              </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarSeparator />
+            <AppBarButton Label="Import" Click="OnImportFile">
+              <AppBarButton.Icon>
+                <FontIcon Glyph="&#xE8B5;" />
+              </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarButton Label="Export" Click="OnExportFile">
+              <AppBarButton.Icon>
+                <FontIcon Glyph="&#xEDE1;" />
+              </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarSeparator />
+            <AppBarButton Label="Folder" Click="OnNewFolder">
+              <AppBarButton.Icon>
+                <FontIcon Glyph="&#xE8F4;" />
+              </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarButton Label="Rename" Click="OnRename" ToolTipService.ToolTip="Rename (F2)">
+              <AppBarButton.Icon>
+                <FontIcon Glyph="&#xE8AC;" />
+              </AppBarButton.Icon>
+              <AppBarButton.KeyboardAccelerators>
+                <KeyboardAccelerator Key="F2" />
+              </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarButton Label="Delete" Click="OnDelete">
+              <AppBarButton.Icon>
+                <FontIcon Glyph="&#xE74D;" Foreground="#EF4444" />
+              </AppBarButton.Icon>
+              <AppBarButton.KeyboardAccelerators>
+                <KeyboardAccelerator Key="Delete" />
+              </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <CommandBar.SecondaryCommands>
+              <AppBarButton Label="Undo" Click="OnUndo">
+                <AppBarButton.Icon>
+                  <FontIcon Glyph="&#xE7A7;" />
+                </AppBarButton.Icon>
+                <AppBarButton.KeyboardAccelerators>
+                  <KeyboardAccelerator Key="Z" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+              </AppBarButton>
+              <AppBarButton Label="Redo" Click="OnRedo">
+                <AppBarButton.Icon>
+                  <FontIcon Glyph="&#xE7A6;" />
+                </AppBarButton.Icon>
+                <AppBarButton.KeyboardAccelerators>
+                  <KeyboardAccelerator Key="Y" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+              </AppBarButton>
+              <AppBarSeparator />
+              <AppBarButton Label="Command Palette" Click="OnShowCommandPalette">
+                <AppBarButton.Icon>
+                  <FontIcon Glyph="&#xE71E;" />
+                </AppBarButton.Icon>
+                <AppBarButton.KeyboardAccelerators>
+                  <KeyboardAccelerator Key="P" Modifiers="Control,Shift" />
+                </AppBarButton.KeyboardAccelerators>
+              </AppBarButton>
+              <AppBarButton Label="Sector Viewer" Click="OnShowSectorViewer">
+                <AppBarButton.Icon>
+                  <FontIcon Glyph="&#xE7B8;" />
+                </AppBarButton.Icon>
+              </AppBarButton>
+              <AppBarButton Label="Diagnostics" Click="OnShowDiagnostics">
+                <AppBarButton.Icon>
+                  <FontIcon Glyph="&#xE9D9;" />
+                </AppBarButton.Icon>
+              </AppBarButton>
+              <AppBarButton Label="Toggle Activity Log" Click="OnToggleActivityLog">
+                <AppBarButton.Icon>
+                  <FontIcon Glyph="&#xE9F9;" />
+                </AppBarButton.Icon>
+              </AppBarButton>
+            </CommandBar.SecondaryCommands>
+          </CommandBar>
+
+          <!-- BREADCRUMB + FILTER + DEEP SEARCH -->
+          <Border
+            Grid.Row="3"
+            Padding="16,6,16,6"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,0,0,1"
+          >
+            <Grid ColumnSpacing="8">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <FontIcon Glyph="&#xE8DA;" FontSize="13" Opacity="0.25" VerticalAlignment="Center" />
+              <BreadcrumbBar
+                x:Name="PathBreadcrumb"
+                Grid.Column="1"
+                ItemClicked="OnBreadcrumbClicked"
+                VerticalAlignment="Center"
+              />
+              <ToggleButton
+                x:Name="DeepSearchToggle"
+                Grid.Column="2"
+                ToolTipService.ToolTip="Deep search (recursive)"
+                Click="OnDeepSearchToggle"
+                Padding="6,4"
+                CornerRadius="6"
+                Background="Transparent"
+                BorderThickness="0"
+                Opacity="0.4"
+              >
+                <FontIcon Glyph="&#xE773;" FontSize="12" />
+              </ToggleButton>
+              <AutoSuggestBox
+                x:Name="FilterBox"
+                Grid.Column="3"
+                PlaceholderText="Filter…"
+                QueryIcon="Find"
+                Width="200"
+                TextChanged="OnFilterChanged"
+                VerticalAlignment="Center"
+              >
+                <AutoSuggestBox.KeyboardAccelerators>
+                  <KeyboardAccelerator Key="F" Modifiers="Control" />
+                </AutoSuggestBox.KeyboardAccelerators>
+              </AutoSuggestBox>
+            </Grid>
+          </Border>
+
+          <!-- ═══════ MAIN AREA ═══════ -->
+          <Grid x:Name="MainAreaGrid" Grid.Row="4">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*" />
+              <RowDefinition x:Name="ActivityLogRow" Height="0" />
+            </Grid.RowDefinitions>
+
+            <Grid x:Name="MainSplitGrid" Grid.Row="0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="270" MinWidth="220" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="PreviewDividerCol" Width="0" />
+                <ColumnDefinition x:Name="PreviewPaneCol" Width="0" />
+              </Grid.ColumnDefinitions>
+
+              <!-- ═══ SIDEBAR ═══ -->
+              <Grid
+                Grid.Column="0"
+                Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}"
+              >
+                <Border Background="{StaticResource SidebarGradient}" IsHitTestVisible="False" />
+                <Grid>
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                  </Grid.RowDefinitions>
+
+                  <!-- Disk info card -->
+                  <Border
+                    Grid.Row="0"
+                    Margin="12,14,12,0"
+                    Padding="14,12"
+                    CornerRadius="12"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                <StackPanel>
-                    <TextBox x:Name="CmdPaletteInput" PlaceholderText="Type a command…"
-                             Margin="12,12,12,4" CornerRadius="8" FontSize="14"
-                             TextChanged="OnCmdPaletteTextChanged" KeyDown="OnCmdPaletteKeyDown"/>
-                    <ListView x:Name="CmdPaletteResults" MaxHeight="380" Padding="4"
-                              SelectionMode="Single" IsItemClickEnabled="True"
-                              ItemClick="OnCmdPaletteItemClick"/>
-                </StackPanel>
-            </Border>
-        </Grid>
-
-
-        <!-- ════════ TITLE BAR ════════ -->
-        <Grid x:Name="AppTitleBar" Grid.Row="0" Background="Transparent" Canvas.ZIndex="50">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal" Spacing="12" Margin="16,0,0,0" VerticalAlignment="Center">
-                <Border Width="26" Height="26" CornerRadius="7">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#FF7C5CE7" Offset="0"/>
-                            <GradientStop Color="#FF3B82F6" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.Background>
-                    <FontIcon Glyph="&#xEDA2;" FontSize="12" Foreground="White"
-                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <TextBlock x:Name="TitleBarText" Text="AXFS Explorer" FontSize="12"
-                           FontWeight="SemiBold" VerticalAlignment="Center" Opacity="0.65"
-                           IsHitTestVisible="False" CharacterSpacing="20"/>
-            </StackPanel>
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" Margin="0,0,140,0"
-                        VerticalAlignment="Center">
-                <Button Style="{StaticResource MuteButton}" ToolTipService.ToolTip="Undo (Ctrl+Z)"
-                        Click="OnUndo" Opacity="0.45">
-                    <FontIcon Glyph="&#xE7A7;" FontSize="12"/>
-                </Button>
-                <Button Style="{StaticResource MuteButton}" ToolTipService.ToolTip="Redo (Ctrl+Y)"
-                        Click="OnRedo" Opacity="0.45">
-                    <FontIcon Glyph="&#xE7A6;" FontSize="12"/>
-                </Button>
-                <Border Width="1" Height="14" Margin="4,0"
-                        Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
-                <Button Style="{StaticResource MuteButton}" ToolTipService.ToolTip="Quick Open (Ctrl+O)"
-                        Click="OnOpenImage" Opacity="0.45">
-                    <FontIcon Glyph="&#xE838;" FontSize="12"/>
-                </Button>
-                <Button Style="{StaticResource MuteButton}" ToolTipService.ToolTip="Preview Pane"
-                        Click="OnTogglePreviewPane" Opacity="0.45">
-                    <FontIcon x:Name="PreviewPaneIcon" Glyph="&#xE89F;" FontSize="12"/>
-                </Button>
-                <Button Style="{StaticResource MuteButton}" ToolTipService.ToolTip="Toggle Theme"
-                        Click="OnQuickThemeToggle" Opacity="0.45">
-                    <FontIcon x:Name="ThemeToggleIcon" Glyph="&#xE793;" FontSize="12"/>
-                </Button>
-            </StackPanel>
-        </Grid>
-
-        <!-- ════════ NAV VIEW ════════ -->
-        <NavigationView x:Name="NavView" Grid.Row="1" PaneDisplayMode="Top"
-                         IsBackButtonVisible="Collapsed" IsSettingsVisible="True"
-                         SelectionChanged="OnNavSelectionChanged">
-            <NavigationView.MenuItems>
-                <NavigationViewItem Content="Explorer" Tag="explorer" IsSelected="True">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xEC50;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem Content="Health" Tag="health">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE9D9;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-            </NavigationView.MenuItems>
-
-            <Grid x:Name="ContentArea">
-
-                <!-- ════════ EXPLORER VIEW ════════ -->
-                <Grid x:Name="ExplorerView">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- TAB STRIP -->
-                    <Border Grid.Row="0" Padding="10,8,10,0"
-                            Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
-                                          HorizontalScrollMode="Auto" VerticalScrollMode="Disabled">
-                                <StackPanel x:Name="TabStripPanel" Orientation="Horizontal" Spacing="3"/>
-                            </ScrollViewer>
-                            <Button Grid.Column="1" Click="OnAddTab" Padding="8,4"
-                                    ToolTipService.ToolTip="New tab (Ctrl+T)"
-                                    Background="Transparent" Margin="6,0,0,0" CornerRadius="6" Opacity="0.5">
-                                <FontIcon Glyph="&#xE710;" FontSize="11"/>
-                                <Button.KeyboardAccelerators>
-                                    <KeyboardAccelerator Key="T" Modifiers="Control"/>
-                                </Button.KeyboardAccelerators>
-                            </Button>
-                        </Grid>
-                    </Border>
-
-                    <InfoBar x:Name="NotificationBar" Grid.Row="1" IsOpen="False" IsClosable="True"/>
-
-                    <!-- TOOLBAR -->
-                    <CommandBar Grid.Row="2" DefaultLabelPosition="Right" IsOpen="False"
-                                OverflowButtonVisibility="Auto"
-                                Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
-                        <AppBarButton Label="Open" Click="OnOpenImage" ToolTipService.ToolTip="Open (Ctrl+O)">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE838;"/>
-                            </AppBarButton.Icon>
-                            <AppBarButton.KeyboardAccelerators>
-                                <KeyboardAccelerator Key="O" Modifiers="Control"/>
-                            </AppBarButton.KeyboardAccelerators>
-                        </AppBarButton>
-                        <AppBarButton Label="New" Click="OnNewImage" ToolTipService.ToolTip="Create new (Ctrl+N)">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE710;"/>
-                            </AppBarButton.Icon>
-                            <AppBarButton.KeyboardAccelerators>
-                                <KeyboardAccelerator Key="N" Modifiers="Control"/>
-                            </AppBarButton.KeyboardAccelerators>
-                        </AppBarButton>
-                        <AppBarButton Icon="Save" Label="Save" Click="OnSave" ToolTipService.ToolTip="Save (Ctrl+S)">
-                            <AppBarButton.KeyboardAccelerators>
-                                <KeyboardAccelerator Key="S" Modifiers="Control"/>
-                            </AppBarButton.KeyboardAccelerators>
-                        </AppBarButton>
-                        <AppBarButton Label="Eject" Click="OnUnloadImage">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xF12B;" Foreground="{ThemeResource SystemFillColorCautionBrush}"/>
-                            </AppBarButton.Icon>
-                        </AppBarButton>
-                        <AppBarSeparator/>
-                        <AppBarButton Label="Up" Click="OnNavigateUp">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE74A;"/>
-                            </AppBarButton.Icon>
-                        </AppBarButton>
-                        <AppBarButton Label="Refresh" Click="OnRefresh">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE72C;"/>
-                            </AppBarButton.Icon>
-                            <AppBarButton.KeyboardAccelerators>
-                                <KeyboardAccelerator Key="F5"/>
-                            </AppBarButton.KeyboardAccelerators>
-                        </AppBarButton>
-                        <AppBarSeparator/>
-                        <AppBarButton Label="Import" Click="OnImportFile">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE8B5;"/>
-                            </AppBarButton.Icon>
-                        </AppBarButton>
-                        <AppBarButton Label="Export" Click="OnExportFile">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xEDE1;"/>
-                            </AppBarButton.Icon>
-                        </AppBarButton>
-                        <AppBarSeparator/>
-                        <AppBarButton Label="Folder" Click="OnNewFolder">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE8F4;"/>
-                            </AppBarButton.Icon>
-                        </AppBarButton>
-                        <AppBarButton Label="Rename" Click="OnRename" ToolTipService.ToolTip="Rename (F2)">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE8AC;"/>
-                            </AppBarButton.Icon>
-                            <AppBarButton.KeyboardAccelerators>
-                                <KeyboardAccelerator Key="F2"/>
-                            </AppBarButton.KeyboardAccelerators>
-                        </AppBarButton>
-                        <AppBarButton Label="Delete" Click="OnDelete">
-                            <AppBarButton.Icon>
-                                <FontIcon Glyph="&#xE74D;" Foreground="#EF4444"/>
-                            </AppBarButton.Icon>
-                            <AppBarButton.KeyboardAccelerators>
-                                <KeyboardAccelerator Key="Delete"/>
-                            </AppBarButton.KeyboardAccelerators>
-                        </AppBarButton>
-                        <CommandBar.SecondaryCommands>
-                            <AppBarButton Label="Undo" Click="OnUndo">
-                                <AppBarButton.Icon>
-                                    <FontIcon Glyph="&#xE7A7;"/>
-                                </AppBarButton.Icon>
-                                <AppBarButton.KeyboardAccelerators>
-                                    <KeyboardAccelerator Key="Z" Modifiers="Control"/>
-                                </AppBarButton.KeyboardAccelerators>
-                            </AppBarButton>
-                            <AppBarButton Label="Redo" Click="OnRedo">
-                                <AppBarButton.Icon>
-                                    <FontIcon Glyph="&#xE7A6;"/>
-                                </AppBarButton.Icon>
-                                <AppBarButton.KeyboardAccelerators>
-                                    <KeyboardAccelerator Key="Y" Modifiers="Control"/>
-                                </AppBarButton.KeyboardAccelerators>
-                            </AppBarButton>
-                            <AppBarSeparator/>
-                            <AppBarButton Label="Command Palette" Click="OnShowCommandPalette">
-                                <AppBarButton.Icon>
-                                    <FontIcon Glyph="&#xE71E;"/>
-                                </AppBarButton.Icon>
-                                <AppBarButton.KeyboardAccelerators>
-                                    <KeyboardAccelerator Key="P" Modifiers="Control,Shift"/>
-                                </AppBarButton.KeyboardAccelerators>
-                            </AppBarButton>
-                            <AppBarButton Label="Sector Viewer" Click="OnShowSectorViewer">
-                                <AppBarButton.Icon>
-                                    <FontIcon Glyph="&#xE7B8;"/>
-                                </AppBarButton.Icon>
-                            </AppBarButton>
-                            <AppBarButton Label="Diagnostics" Click="OnShowDiagnostics">
-                                <AppBarButton.Icon>
-                                    <FontIcon Glyph="&#xE9D9;"/>
-                                </AppBarButton.Icon>
-                            </AppBarButton>
-                            <AppBarButton Label="Toggle Activity Log" Click="OnToggleActivityLog">
-                                <AppBarButton.Icon>
-                                    <FontIcon Glyph="&#xE9F9;"/>
-                                </AppBarButton.Icon>
-                            </AppBarButton>
-                        </CommandBar.SecondaryCommands>
-                    </CommandBar>
-
-                    <!-- BREADCRUMB + FILTER + DEEP SEARCH -->
-                    <Border Grid.Row="3" Padding="16,6,16,6"
-                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
-                        <Grid ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE8DA;" FontSize="13" Opacity="0.25" VerticalAlignment="Center"/>
-                            <BreadcrumbBar x:Name="PathBreadcrumb" Grid.Column="1"
-                                           ItemClicked="OnBreadcrumbClicked" VerticalAlignment="Center"/>
-                            <ToggleButton x:Name="DeepSearchToggle" Grid.Column="2"
-                                          ToolTipService.ToolTip="Deep search (recursive)"
-                                          Click="OnDeepSearchToggle" Padding="6,4" CornerRadius="6"
-                                          Background="Transparent" BorderThickness="0" Opacity="0.4">
-                                <FontIcon Glyph="&#xE773;" FontSize="12"/>
-                            </ToggleButton>
-                            <AutoSuggestBox x:Name="FilterBox" Grid.Column="3"
-                                            PlaceholderText="Filter…" QueryIcon="Find" Width="200"
-                                            TextChanged="OnFilterChanged" VerticalAlignment="Center">
-                                <AutoSuggestBox.KeyboardAccelerators>
-                                    <KeyboardAccelerator Key="F" Modifiers="Control"/>
-                                </AutoSuggestBox.KeyboardAccelerators>
-                            </AutoSuggestBox>
-                        </Grid>
-                    </Border>
-
-                    <!-- ═══════ MAIN AREA ═══════ -->
-                    <Grid x:Name="MainAreaGrid" Grid.Row="4">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition x:Name="ActivityLogRow" Height="0"/>
-                        </Grid.RowDefinitions>
-
-                        <Grid x:Name="MainSplitGrid" Grid.Row="0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="270" MinWidth="220"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition x:Name="PreviewDividerCol" Width="0"/>
-                                <ColumnDefinition x:Name="PreviewPaneCol" Width="0"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- ═══ SIDEBAR ═══ -->
-                            <Grid Grid.Column="0" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
-                                <Border Background="{StaticResource SidebarGradient}" IsHitTestVisible="False"/>
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-
-                                    <!-- Disk info card -->
-                                    <Border Grid.Row="0" Margin="12,14,12,0" Padding="14,12" CornerRadius="12"
-                                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                                        <Grid ColumnSpacing="12">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Border Width="44" Height="44" CornerRadius="11" VerticalAlignment="Center">
-                                                <Border.Background>
-                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                        <GradientStop Color="#FF7C5CE7" Offset="0"/>
-                                                        <GradientStop Color="#FF3B82F6" Offset="1"/>
-                                                    </LinearGradientBrush>
-                                                </Border.Background>
-                                                <FontIcon Glyph="&#xEDA2;" FontSize="20" Foreground="White"
-                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                                                <TextBlock x:Name="DiskNameText" Text="No image loaded"
-                                                           FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock x:Name="DiskSizeText" Text="" FontSize="11" Opacity="0.40"/>
-                                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <TextBlock x:Name="DiskFormatText" Text="" FontSize="10" Opacity="0.25"/>
-                                                    <Border x:Name="FormatBadge" CornerRadius="4" Padding="6,1" Visibility="Collapsed">
-                                                        <Border.Background>
-                                                            <SolidColorBrush Color="#FF7C5CE7" Opacity="0.12"/>
-                                                        </Border.Background>
-                                                        <TextBlock x:Name="FormatBadgeText" Text="v2" FontSize="9"
-                                                                   FontWeight="Bold" Foreground="#FF7C5CE7"/>
-                                                    </Border>
-                                                </StackPanel>
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
-
-                                    <!-- Partition map bar -->
-                                    <Border x:Name="PartitionMapBar" Grid.Row="1" Margin="12,8,12,0"
-                                            Height="14" CornerRadius="4" Visibility="Collapsed"
-                                            Background="{ThemeResource SubtleFillColorSecondaryBrush}">
-                                        <StackPanel x:Name="PartitionMapStack" Orientation="Horizontal"/>
-                                    </Border>
-
-                                    <TextBlock Grid.Row="2" Text="PARTITIONS" FontSize="10"
-                                               FontWeight="SemiBold" Opacity="0.20"
-                                               CharacterSpacing="180" Margin="16,14,0,6"/>
-
-                                    <ListView x:Name="PartitionList" Grid.Row="3" Padding="8,0"
-                                              SelectionChanged="OnPartitionSelected">
-                                        <ListView.ItemTemplate>
-                                            <DataTemplate x:DataType="local:PartitionItem">
-                                                <Grid Padding="10,10" ColumnSpacing="12">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <Border Width="36" Height="36" CornerRadius="9">
-                                                        <Border.Background>
-                                                            <SolidColorBrush Color="{x:Bind AccentColor}" Opacity="0.1"/>
-                                                        </Border.Background>
-                                                        <FontIcon Glyph="{x:Bind IconGlyph}" FontSize="15"
-                                                                  Foreground="{x:Bind AccentBrush}"
-                                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
-                                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                                                        <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" FontSize="12"/>
-                                                        <TextBlock Text="{x:Bind Detail}" Opacity="0.35" FontSize="11"
-                                                                   TextTrimming="CharacterEllipsis"/>
-                                                    </StackPanel>
-                                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
-                                                        <FontIcon Glyph="&#xE72E;" FontSize="11" Opacity="0.25"
-                                                                  Visibility="{x:Bind LockVisibility}"/>
-                                                        <Border Width="7" Height="7" CornerRadius="4"
-                                                                Background="{x:Bind HealthBrush}"
-                                                                Visibility="{x:Bind HealthVisibility}"
-                                                                ToolTipService.ToolTip="{x:Bind HealthTooltip}"/>
-                                                    </StackPanel>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ListView.ItemTemplate>
-                                        <ListView.ContextFlyout>
-                                            <MenuFlyout>
-                                                <MenuFlyoutItem Text="Properties" Click="OnPartitionProperties">
-                                                    <MenuFlyoutItem.Icon>
-                                                        <FontIcon Glyph="&#xE946;"/>
-                                                    </MenuFlyoutItem.Icon>
-                                                </MenuFlyoutItem>
-                                                <MenuFlyoutSeparator/>
-                                                <MenuFlyoutItem Text="Toggle Lock" Click="OnPartitionToggleLock">
-                                                    <MenuFlyoutItem.Icon>
-                                                        <FontIcon Glyph="&#xE72E;"/>
-                                                    </MenuFlyoutItem.Icon>
-                                                </MenuFlyoutItem>
-                                            </MenuFlyout>
-                                        </ListView.ContextFlyout>
-                                    </ListView>
-
-                                    <!-- Partition toolbar -->
-                                    <StackPanel x:Name="PartitionToolbar" Grid.Row="4"
-                                                Orientation="Horizontal" Spacing="2" Padding="8,2,8,6">
-                                        <Button x:Name="PartPropsBtn" Click="OnPartitionProperties"
-                                                Style="{StaticResource MuteButton}" IsEnabled="False">
-                                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                                <FontIcon Glyph="&#xE946;" FontSize="11"/>
-                                                <TextBlock Text="Properties" FontSize="11" Opacity="0.5"/>
-                                            </StackPanel>
-                                        </Button>
-                                        <Button x:Name="PartLockBtn" Click="OnPartitionToggleLock"
-                                                Style="{StaticResource MuteButton}" IsEnabled="False">
-                                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                                <FontIcon x:Name="PartLockIcon" Glyph="&#xE72E;" FontSize="11"/>
-                                                <TextBlock x:Name="PartLockText" Text="Lock" FontSize="11" Opacity="0.5"/>
-                                            </StackPanel>
-                                        </Button>
-                                    </StackPanel>
-
-                                    <!-- Bookmarks -->
-                                    <Border x:Name="BookmarkSection" Grid.Row="5" Margin="12,0,12,4" Visibility="Collapsed">
-                                        <StackPanel>
-                                            <Grid Margin="4,0,0,4">
-                                                <TextBlock Text="BOOKMARKS" FontSize="10" FontWeight="SemiBold"
-                                                           Opacity="0.20" CharacterSpacing="180" VerticalAlignment="Center"/>
-                                                <Button HorizontalAlignment="Right" Click="OnAddBookmark"
-                                                        Style="{StaticResource MuteButton}" Padding="4,2"
-                                                        ToolTipService.ToolTip="Bookmark current path">
-                                                    <FontIcon Glyph="&#xE710;" FontSize="9"/>
-                                                </Button>
-                                            </Grid>
-                                            <StackPanel x:Name="BookmarkStack" Spacing="1"/>
-                                        </StackPanel>
-                                    </Border>
-
-                                    <!-- Volume info -->
-                                    <Border x:Name="VolumeInfoPanel" Grid.Row="6"
-                                            Margin="12,0,12,12" Padding="14,12" CornerRadius="12"
-                                            Visibility="Collapsed"
-                                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Grid Width="52" Height="52" Margin="0,0,12,0" VerticalAlignment="Center">
-                                                <ProgressRing x:Name="VolumeRing" Width="52" Height="52"
-                                                              IsIndeterminate="False" Value="0" Maximum="100" Minimum="0"
-                                                              Background="{ThemeResource SubtleFillColorSecondaryBrush}"/>
-                                                <TextBlock x:Name="VolumePercentText" Text="0%" FontSize="10"
-                                                           FontWeight="Bold" HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center" Opacity="0.55"/>
-                                            </Grid>
-                                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
-                                                <TextBlock x:Name="VolumeLabelText" FontSize="12" FontWeight="SemiBold"/>
-                                                <TextBlock x:Name="VolumeUsageText" FontSize="11" Opacity="0.40"/>
-                                                <ProgressBar x:Name="VolumeUsageBar" Height="3" Margin="0,2,0,0" CornerRadius="2"/>
-                                                <TextBlock x:Name="VolumeDetailText" FontSize="9" Opacity="0.20"
-                                                           FontFamily="Cascadia Code,Consolas"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
-                                </Grid>
-                            </Grid>
-
-                            <Border Grid.Column="1" Width="1"
-                                    Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
-
-                            <!-- ═══ FILE LIST AREA ═══ -->
-                            <Grid Grid.Column="2" AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-
-                                <Border x:Name="FileStatsBar" Grid.Row="0" Padding="16,5,16,5" Visibility="Collapsed"
-                                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel x:Name="FileStatsBadges" Orientation="Horizontal" Spacing="4"/>
-                                        <TextBlock x:Name="TotalSizeText" Grid.Column="1" FontSize="11"
-                                                   Opacity="0.30" VerticalAlignment="Center" FontFamily="Cascadia Code,Consolas"/>
-                                    </Grid>
-                                </Border>
-
-                                <!-- SORTABLE COLUMN HEADERS -->
-                                <Grid Grid.Row="1" Padding="20,6,16,6"
-                                      Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                                      BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="44"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="80"/>
-                                        <ColumnDefinition Width="100"/>
-                                        <ColumnDefinition Width="140"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Button Grid.Column="1" Click="OnSortByName" Style="{StaticResource SortHeaderBtn}">
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <TextBlock Text="NAME" FontSize="10" FontWeight="SemiBold" Opacity="0.25" CharacterSpacing="120"/>
-                                            <FontIcon x:Name="SortNameIcon" Glyph="" FontSize="8" Opacity="0.3"/>
-                                        </StackPanel>
-                                    </Button>
-                                    <Button Grid.Column="2" Click="OnSortBySize" Style="{StaticResource SortHeaderBtn}" HorizontalContentAlignment="Right">
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <TextBlock Text="SIZE" FontSize="10" FontWeight="SemiBold" Opacity="0.25" CharacterSpacing="120"/>
-                                            <FontIcon x:Name="SortSizeIcon" Glyph="" FontSize="8" Opacity="0.3"/>
-                                        </StackPanel>
-                                    </Button>
-                                    <Button Grid.Column="3" Click="OnSortByType" Style="{StaticResource SortHeaderBtn}" Margin="12,0,0,0">
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <TextBlock Text="TYPE" FontSize="10" FontWeight="SemiBold" Opacity="0.25" CharacterSpacing="120"/>
-                                            <FontIcon x:Name="SortTypeIcon" Glyph="" FontSize="8" Opacity="0.3"/>
-                                        </StackPanel>
-                                    </Button>
-                                    <Button Grid.Column="4" Click="OnSortByDate" Style="{StaticResource SortHeaderBtn}" HorizontalContentAlignment="Right">
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <TextBlock Text="MODIFIED" FontSize="10" FontWeight="SemiBold" Opacity="0.25" CharacterSpacing="120"/>
-                                            <FontIcon x:Name="SortDateIcon" Glyph="" FontSize="8" Opacity="0.3"/>
-                                        </StackPanel>
-                                    </Button>
-                                </Grid>
-
-                                <ListView x:Name="FileList" Grid.Row="2" Padding="6,4"
-                                          SelectionMode="Extended"
-                                          DoubleTapped="OnFileDoubleTapped"
-                                          SelectionChanged="OnFileSelectionChanged"
-                                          KeyDown="OnFileListKeyDown"
-                                          CanDragItems="True" DragItemsStarting="OnDragStarting">
-                                    <ListView.ItemContainerStyle>
-                                        <Style TargetType="ListViewItem">
-                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                            <Setter Property="Margin" Value="0,1,0,1"/>
-                                            <Setter Property="CornerRadius" Value="8"/>
-                                            <Setter Property="Padding" Value="0"/>
-                                        </Style>
-                                    </ListView.ItemContainerStyle>
-                                    <ListView.ItemTemplate>
-                                        <DataTemplate x:DataType="local:FileItem">
-                                            <Grid Padding="8,7" ColumnSpacing="8">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="36"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="80"/>
-                                                    <ColumnDefinition Width="100"/>
-                                                    <ColumnDefinition Width="140"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Border Width="30" Height="30" CornerRadius="8"
-                                                        Background="{x:Bind IconBackground}">
-                                                    <FontIcon Glyph="{x:Bind Icon}" FontSize="14"
-                                                              Foreground="{x:Bind IconForeground}"
-                                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
-                                                    <TextBlock Text="{x:Bind Name}" FontSize="13"/>
-                                                    <TextBlock Text="{x:Bind PreviewText}" FontSize="10" Opacity="0.22"
-                                                               TextTrimming="CharacterEllipsis" MaxLines="1"
-                                                               Visibility="{x:Bind PreviewVisibility}"
-                                                               FontFamily="Cascadia Code,Consolas"/>
-                                                </StackPanel>
-                                                <TextBlock Grid.Column="2" Text="{x:Bind SizeText}" Opacity="0.35"
-                                                           HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="12"
-                                                           FontFamily="Cascadia Code,Consolas"/>
-                                                <TextBlock Grid.Column="3" Text="{x:Bind TypeText}" Opacity="0.25"
-                                                           VerticalAlignment="Center" FontSize="11" Margin="12,0,0,0"
-                                                           TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock Grid.Column="4" Text="{x:Bind DateText}" Opacity="0.25"
-                                                           HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="11"
-                                                           FontFamily="Cascadia Code,Consolas"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ListView.ItemTemplate>
-                                    <ListView.ContextFlyout>
-                                        <MenuFlyout>
-                                            <MenuFlyoutItem Text="Open" Click="OnContextOpen">
-                                                <MenuFlyoutItem.Icon>
-                                                    <FontIcon Glyph="&#xE8E5;"/>
-                                                </MenuFlyoutItem.Icon>
-                                            </MenuFlyoutItem>
-                                            <MenuFlyoutItem Text="Export" Click="OnExportFile">
-                                                <MenuFlyoutItem.Icon>
-                                                    <FontIcon Glyph="&#xEDE1;"/>
-                                                </MenuFlyoutItem.Icon>
-                                            </MenuFlyoutItem>
-                                            <MenuFlyoutItem Text="Rename" Click="OnRename">
-                                                <MenuFlyoutItem.Icon>
-                                                    <FontIcon Glyph="&#xE8AC;"/>
-                                                </MenuFlyoutItem.Icon>
-                                            </MenuFlyoutItem>
-                                            <MenuFlyoutSeparator/>
-                                            <MenuFlyoutItem Text="Inspect Inode" Click="OnInodeInspector">
-                                                <MenuFlyoutItem.Icon>
-                                                    <FontIcon Glyph="&#xE946;"/>
-                                                </MenuFlyoutItem.Icon>
-                                            </MenuFlyoutItem>
-                                            <MenuFlyoutItem Text="Bookmark Path" Click="OnAddBookmarkFromContext">
-                                                <MenuFlyoutItem.Icon>
-                                                    <FontIcon Glyph="&#xE728;"/>
-                                                </MenuFlyoutItem.Icon>
-                                            </MenuFlyoutItem>
-                                            <MenuFlyoutSeparator/>
-                                            <MenuFlyoutItem Text="Delete" Click="OnDelete">
-                                                <MenuFlyoutItem.Icon>
-                                                    <FontIcon Glyph="&#xE74D;" Foreground="#EF4444"/>
-                                                </MenuFlyoutItem.Icon>
-                                            </MenuFlyoutItem>
-                                        </MenuFlyout>
-                                    </ListView.ContextFlyout>
-                                </ListView>
-
-                                <!-- Welcome state -->
-                                <Grid x:Name="WelcomeState" Grid.Row="2" Visibility="Visible">
-                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
-                                        <Canvas Width="120" Height="120" HorizontalAlignment="Center">
-                                            <Border x:Name="FloatingDiskIcon" Width="88" Height="88"
-                                                    CornerRadius="44" Canvas.Left="16" Canvas.Top="16">
-                                                <Border.Background>
-                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                        <GradientStop Color="#0C7C5CE7" Offset="0"/>
-                                                        <GradientStop Color="#0C3B82F6" Offset="1"/>
-                                                    </LinearGradientBrush>
-                                                </Border.Background>
-                                                <FontIcon Glyph="&#xEDA2;" FontSize="36" Opacity="0.30"
-                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <Border x:Name="OrbitDot1" Width="7" Height="7" CornerRadius="4"
-                                                    Canvas.Left="56" Canvas.Top="2">
-                                                <Border.Background>
-                                                    <SolidColorBrush Color="#FF7C5CE7" Opacity="0.40"/>
-                                                </Border.Background>
-                                            </Border>
-                                            <Border x:Name="OrbitDot2" Width="5" Height="5" CornerRadius="3"
-                                                    Canvas.Left="100" Canvas.Top="60">
-                                                <Border.Background>
-                                                    <SolidColorBrush Color="#FF3B82F6" Opacity="0.20"/>
-                                                </Border.Background>
-                                            </Border>
-                                        </Canvas>
-                                        <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                            <TextBlock Text="Welcome to AXFS Explorer" HorizontalAlignment="Center"
-                                                       FontSize="22" FontWeight="Bold" Opacity="0.85"/>
-                                            <TextBlock Text="Open or create an AxisOS disk image to get started"
-                                                       HorizontalAlignment="Center" FontSize="13" Opacity="0.30"/>
-                                        </StackPanel>
-                                        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" Margin="0,4,0,0">
-                                            <Button Click="OnOpenImage" Padding="28,11">
-                                                <Button.Style>
-                                                    <Style TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
-                                                        <Setter Property="CornerRadius" Value="8"/>
-                                                    </Style>
-                                                </Button.Style>
-                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <FontIcon Glyph="&#xE838;" FontSize="14"/>
-                                                    <TextBlock Text="Open Image" FontWeight="SemiBold"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button Click="OnNewImage" Padding="28,11" CornerRadius="8">
-                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <FontIcon Glyph="&#xE710;" FontSize="14"/>
-                                                    <TextBlock Text="Create New"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </StackPanel>
-                                        <!-- Recent files -->
-                                        <StackPanel x:Name="RecentFilesPanel" Visibility="Collapsed"
-                                                    HorizontalAlignment="Center" Margin="0,16,0,0" Spacing="6">
-                                            <TextBlock Text="RECENT FILES" FontSize="10" FontWeight="SemiBold"
-                                                       Opacity="0.20" CharacterSpacing="180" HorizontalAlignment="Center"/>
-                                            <StackPanel x:Name="RecentFilesList" Spacing="3"/>
-                                        </StackPanel>
-                                        <StackPanel x:Name="ShortcutHints" Orientation="Horizontal" Spacing="18"
-                                                    HorizontalAlignment="Center" Margin="0,12,0,0" Opacity="0">
-                                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                                <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                                        CornerRadius="5" Padding="7,3" MinWidth="24" HorizontalAlignment="Center">
-                                                    <TextBlock Text="Ctrl+O" FontSize="10" FontWeight="SemiBold"
-                                                               HorizontalAlignment="Center" Opacity="0.40" FontFamily="Cascadia Code,Consolas"/>
-                                                </Border>
-                                                <TextBlock Text="Open" FontSize="10" Opacity="0.20" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                                <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                                        CornerRadius="5" Padding="7,3">
-                                                    <TextBlock Text="Ctrl+Shift+P" FontSize="10" FontWeight="SemiBold"
-                                                               Opacity="0.40" FontFamily="Cascadia Code,Consolas"/>
-                                                </Border>
-                                                <TextBlock Text="Commands" FontSize="10" Opacity="0.20" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Grid>
-
-                                <StackPanel x:Name="EmptyDirState" Grid.Row="2" VerticalAlignment="Center"
-                                            HorizontalAlignment="Center" Spacing="10" Opacity="0.15" Visibility="Collapsed">
-                                    <FontIcon Glyph="&#xF12B;" FontSize="44" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="This folder is empty" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Drop files here or use Import" HorizontalAlignment="Center" FontSize="12"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <!-- Preview divider -->
-                            <Border x:Name="PreviewDivider" Grid.Column="3" Width="0"
-                                    Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
-
-                            <!-- ═══ PREVIEW PANE ═══ -->
-                            <Grid x:Name="PreviewPane" Grid.Column="4" Visibility="Collapsed">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <Border Padding="12,8" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
-                                    <Grid>
-                                        <TextBlock x:Name="PreviewTitle" Text="Preview" FontSize="12"
-                                                   FontWeight="SemiBold" Opacity="0.5" VerticalAlignment="Center"/>
-                                        <Button HorizontalAlignment="Right" Click="OnTogglePreviewPane"
-                                                Style="{StaticResource MuteButton}" Padding="4,2">
-                                            <FontIcon Glyph="&#xE711;" FontSize="10"/>
-                                        </Button>
-                                    </Grid>
-                                </Border>
-                                <ScrollViewer Grid.Row="1" x:Name="PreviewScroll" Padding="8"
-                                              HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                                    <TextBlock x:Name="PreviewContentText" Text="Select a file to preview"
-                                               FontSize="12" Opacity="0.3" TextWrapping="Wrap"/>
-                                </ScrollViewer>
-                            </Grid>
-                        </Grid>
-
-                        <!-- ═══ ACTIVITY LOG ═══ -->
-                        <Grid x:Name="ActivityLogPanel" Grid.Row="1" Visibility="Collapsed" Height="180">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <Border Padding="12,4" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
-                                <Grid>
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon Glyph="&#xE9F9;" FontSize="11" Opacity="0.3"/>
-                                        <TextBlock Text="Activity Log" FontSize="11" FontWeight="SemiBold" Opacity="0.4"/>
-                                    </StackPanel>
-                                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="2">
-                                        <Button Click="OnClearActivityLog" Style="{StaticResource MuteButton}" Padding="4,2"
-                                                ToolTipService.ToolTip="Clear log">
-                                            <FontIcon Glyph="&#xE74D;" FontSize="10" Opacity="0.3"/>
-                                        </Button>
-                                        <Button Click="OnToggleActivityLog" Style="{StaticResource MuteButton}" Padding="4,2">
-                                            <FontIcon Glyph="&#xE711;" FontSize="10" Opacity="0.3"/>
-                                        </Button>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-                            <ScrollViewer Grid.Row="1" x:Name="ActivityLogScroll">
-                                <TextBlock x:Name="ActivityLogText" FontFamily="Cascadia Code,Consolas"
-                                           FontSize="11" Padding="12,4" IsTextSelectionEnabled="True"
-                                           TextWrapping="NoWrap" Opacity="0.6"/>
-                            </ScrollViewer>
-                        </Grid>
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                  >
+                    <Grid ColumnSpacing="12">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                      </Grid.ColumnDefinitions>
+                      <Border Width="44" Height="44" CornerRadius="11" VerticalAlignment="Center">
+                        <Border.Background>
+                          <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#FF7C5CE7" Offset="0" />
+                            <GradientStop Color="#FF3B82F6" Offset="1" />
+                          </LinearGradientBrush>
+                        </Border.Background>
+                        <FontIcon
+                          Glyph="&#xEDA2;"
+                          FontSize="20"
+                          Foreground="White"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                        />
+                      </Border>
+                      <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock
+                          x:Name="DiskNameText"
+                          Text="No image loaded"
+                          FontSize="13"
+                          FontWeight="SemiBold"
+                          TextTrimming="CharacterEllipsis"
+                        />
+                        <TextBlock x:Name="DiskSizeText" Text="" FontSize="11" Opacity="0.40" />
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                          <TextBlock x:Name="DiskFormatText" Text="" FontSize="10" Opacity="0.25" />
+                          <Border
+                            x:Name="FormatBadge"
+                            CornerRadius="4"
+                            Padding="6,1"
+                            Visibility="Collapsed"
+                          >
+                            <Border.Background>
+                              <SolidColorBrush Color="#FF7C5CE7" Opacity="0.12" />
+                            </Border.Background>
+                            <TextBlock
+                              x:Name="FormatBadgeText"
+                              Text="v2"
+                              FontSize="9"
+                              FontWeight="Bold"
+                              Foreground="#FF7C5CE7"
+                            />
+                          </Border>
+                        </StackPanel>
+                      </StackPanel>
                     </Grid>
+                  </Border>
 
-                    <!-- STATUS BAR -->
-                    <Border Grid.Row="5" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
-                        <Grid Padding="16,4,16,4" ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel x:Name="ActivityLeds" Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
-                                <Border x:Name="Led1" Width="3" Height="3" CornerRadius="2" Background="{ThemeResource SubtleFillColorSecondaryBrush}"/>
-                                <Border x:Name="Led2" Width="3" Height="3" CornerRadius="2" Background="{ThemeResource SubtleFillColorSecondaryBrush}"/>
-                                <Border x:Name="Led3" Width="3" Height="3" CornerRadius="2" Background="{ThemeResource SubtleFillColorSecondaryBrush}"/>
-                                <Border x:Name="Led4" Width="3" Height="3" CornerRadius="2" Background="{ThemeResource SubtleFillColorSecondaryBrush}"/>
-                                <Border x:Name="Led5" Width="3" Height="3" CornerRadius="2" Background="{ThemeResource SubtleFillColorSecondaryBrush}"/>
-                            </StackPanel>
-                            <TextBlock x:Name="StatusText" Grid.Column="1" Text="Ready" FontSize="11" Opacity="0.40" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="ItemCountText" Grid.Column="2" FontSize="11" Opacity="0.30" VerticalAlignment="Center" FontFamily="Cascadia Code,Consolas"/>
-                            <TextBlock x:Name="SelectionText" Grid.Column="3" FontSize="11" Opacity="0.30" VerticalAlignment="Center"/>
-                            <Grid Grid.Column="4" VerticalAlignment="Center" ToolTipService.ToolTip="No image loaded">
-                                <Border x:Name="ConnectionPulse" Width="12" Height="12" CornerRadius="6" Opacity="0.15"/>
-                                <Border x:Name="ConnectionDot" Width="7" Height="7" CornerRadius="4"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Grid>
-                            <TextBlock x:Name="PerfText" Grid.Column="5" FontSize="9" Opacity="0.12"
-                                       VerticalAlignment="Center" FontFamily="Cascadia Code,Consolas"/>
+                  <!-- Partition map bar -->
+                  <Border
+                    x:Name="PartitionMapBar"
+                    Grid.Row="1"
+                    Margin="12,8,12,0"
+                    Height="14"
+                    CornerRadius="4"
+                    Visibility="Collapsed"
+                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                  >
+                    <StackPanel x:Name="PartitionMapStack" Orientation="Horizontal" />
+                  </Border>
+
+                  <TextBlock
+                    Grid.Row="2"
+                    Text="PARTITIONS"
+                    FontSize="10"
+                    FontWeight="SemiBold"
+                    Opacity="0.20"
+                    CharacterSpacing="180"
+                    Margin="16,14,0,6"
+                  />
+
+                  <ListView
+                    x:Name="PartitionList"
+                    Grid.Row="3"
+                    Padding="8,0"
+                    SelectionChanged="OnPartitionSelected"
+                  >
+                    <ListView.ItemTemplate>
+                      <DataTemplate x:DataType="local:PartitionItem">
+                        <Grid Padding="10,10" ColumnSpacing="12">
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                          </Grid.ColumnDefinitions>
+                          <Border Width="36" Height="36" CornerRadius="9">
+                            <Border.Background>
+                              <SolidColorBrush Color="{x:Bind AccentColor}" Opacity="0.1" />
+                            </Border.Background>
+                            <FontIcon
+                              Glyph="{x:Bind IconGlyph}"
+                              FontSize="15"
+                              Foreground="{x:Bind AccentBrush}"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                            />
+                          </Border>
+                          <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" FontSize="12" />
+                            <TextBlock
+                              Text="{x:Bind Detail}"
+                              Opacity="0.35"
+                              FontSize="11"
+                              TextTrimming="CharacterEllipsis"
+                            />
+                          </StackPanel>
+                          <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
+                            <FontIcon
+                              Glyph="&#xE72E;"
+                              FontSize="11"
+                              Opacity="0.25"
+                              Visibility="{x:Bind LockVisibility}"
+                            />
+                            <Border
+                              Width="7"
+                              Height="7"
+                              CornerRadius="4"
+                              Background="{x:Bind HealthBrush}"
+                              Visibility="{x:Bind HealthVisibility}"
+                              ToolTipService.ToolTip="{x:Bind HealthTooltip}"
+                            />
+                          </StackPanel>
                         </Grid>
-                    </Border>
+                      </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.ContextFlyout>
+                      <MenuFlyout>
+                        <MenuFlyoutItem Text="Properties" Click="OnPartitionProperties">
+                          <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE946;" />
+                          </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem Text="Toggle Lock" Click="OnPartitionToggleLock">
+                          <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE72E;" />
+                          </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                      </MenuFlyout>
+                    </ListView.ContextFlyout>
+                  </ListView>
+
+                  <!-- Partition toolbar -->
+                  <StackPanel
+                    x:Name="PartitionToolbar"
+                    Grid.Row="4"
+                    Orientation="Horizontal"
+                    Spacing="2"
+                    Padding="8,2,8,6"
+                  >
+                    <Button
+                      x:Name="PartPropsBtn"
+                      Click="OnPartitionProperties"
+                      Style="{StaticResource MuteButton}"
+                      IsEnabled="False"
+                    >
+                      <StackPanel Orientation="Horizontal" Spacing="5">
+                        <FontIcon Glyph="&#xE946;" FontSize="11" />
+                        <TextBlock Text="Properties" FontSize="11" Opacity="0.5" />
+                      </StackPanel>
+                    </Button>
+                    <Button
+                      x:Name="PartLockBtn"
+                      Click="OnPartitionToggleLock"
+                      Style="{StaticResource MuteButton}"
+                      IsEnabled="False"
+                    >
+                      <StackPanel Orientation="Horizontal" Spacing="5">
+                        <FontIcon x:Name="PartLockIcon" Glyph="&#xE72E;" FontSize="11" />
+                        <TextBlock x:Name="PartLockText" Text="Lock" FontSize="11" Opacity="0.5" />
+                      </StackPanel>
+                    </Button>
+                  </StackPanel>
+
+                  <!-- Bookmarks -->
+                  <Border
+                    x:Name="BookmarkSection"
+                    Grid.Row="5"
+                    Margin="12,0,12,4"
+                    Visibility="Collapsed"
+                  >
+                    <StackPanel>
+                      <Grid Margin="4,0,0,4">
+                        <TextBlock
+                          Text="BOOKMARKS"
+                          FontSize="10"
+                          FontWeight="SemiBold"
+                          Opacity="0.20"
+                          CharacterSpacing="180"
+                          VerticalAlignment="Center"
+                        />
+                        <Button
+                          HorizontalAlignment="Right"
+                          Click="OnAddBookmark"
+                          Style="{StaticResource MuteButton}"
+                          Padding="4,2"
+                          ToolTipService.ToolTip="Bookmark current path"
+                        >
+                          <FontIcon Glyph="&#xE710;" FontSize="9" />
+                        </Button>
+                      </Grid>
+                      <StackPanel x:Name="BookmarkStack" Spacing="1" />
+                    </StackPanel>
+                  </Border>
+
+                  <!-- Volume info -->
+                  <Border
+                    x:Name="VolumeInfoPanel"
+                    Grid.Row="6"
+                    Margin="12,0,12,12"
+                    Padding="14,12"
+                    CornerRadius="12"
+                    Visibility="Collapsed"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                  >
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                      </Grid.ColumnDefinitions>
+                      <Grid Width="52" Height="52" Margin="0,0,12,0" VerticalAlignment="Center">
+                        <ProgressRing
+                          x:Name="VolumeRing"
+                          Width="52"
+                          Height="52"
+                          IsIndeterminate="False"
+                          Value="0"
+                          Maximum="100"
+                          Minimum="0"
+                          Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                        />
+                        <TextBlock
+                          x:Name="VolumePercentText"
+                          Text="0%"
+                          FontSize="10"
+                          FontWeight="Bold"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Opacity="0.55"
+                        />
+                      </Grid>
+                      <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                        <TextBlock x:Name="VolumeLabelText" FontSize="12" FontWeight="SemiBold" />
+                        <TextBlock x:Name="VolumeUsageText" FontSize="11" Opacity="0.40" />
+                        <ProgressBar
+                          x:Name="VolumeUsageBar"
+                          Height="3"
+                          Margin="0,2,0,0"
+                          CornerRadius="2"
+                        />
+                        <TextBlock
+                          x:Name="VolumeDetailText"
+                          FontSize="9"
+                          Opacity="0.20"
+                          FontFamily="Cascadia Code,Consolas"
+                        />
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </Grid>
+              </Grid>
+
+              <Border
+                Grid.Column="1"
+                Width="1"
+                Background="{ThemeResource DividerStrokeColorDefaultBrush}"
+              />
+
+              <!-- ═══ FILE LIST AREA ═══ -->
+              <Grid Grid.Column="2" AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border
+                  x:Name="FileStatsBar"
+                  Grid.Row="0"
+                  Padding="16,5,16,5"
+                  Visibility="Collapsed"
+                  Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                  BorderThickness="0,0,0,1"
+                >
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel x:Name="FileStatsBadges" Orientation="Horizontal" Spacing="4" />
+                    <TextBlock
+                      x:Name="TotalSizeText"
+                      Grid.Column="1"
+                      FontSize="11"
+                      Opacity="0.30"
+                      VerticalAlignment="Center"
+                      FontFamily="Cascadia Code,Consolas"
+                    />
+                  </Grid>
+                </Border>
+
+                <!-- SORTABLE COLUMN HEADERS -->
+                <Grid
+                  Grid.Row="1"
+                  Padding="20,6,16,6"
+                  Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                  BorderThickness="0,0,0,1"
+                >
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="44" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="80" />
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="140" />
+                  </Grid.ColumnDefinitions>
+                  <Button
+                    Grid.Column="1"
+                    Click="OnSortByName"
+                    Style="{StaticResource SortHeaderBtn}"
+                  >
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <TextBlock
+                        Text="NAME"
+                        FontSize="10"
+                        FontWeight="SemiBold"
+                        Opacity="0.25"
+                        CharacterSpacing="120"
+                      />
+                      <FontIcon x:Name="SortNameIcon" Glyph="" FontSize="8" Opacity="0.3" />
+                    </StackPanel>
+                  </Button>
+                  <Button
+                    Grid.Column="2"
+                    Click="OnSortBySize"
+                    Style="{StaticResource SortHeaderBtn}"
+                    HorizontalContentAlignment="Right"
+                  >
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <TextBlock
+                        Text="SIZE"
+                        FontSize="10"
+                        FontWeight="SemiBold"
+                        Opacity="0.25"
+                        CharacterSpacing="120"
+                      />
+                      <FontIcon x:Name="SortSizeIcon" Glyph="" FontSize="8" Opacity="0.3" />
+                    </StackPanel>
+                  </Button>
+                  <Button
+                    Grid.Column="3"
+                    Click="OnSortByType"
+                    Style="{StaticResource SortHeaderBtn}"
+                    Margin="12,0,0,0"
+                  >
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <TextBlock
+                        Text="TYPE"
+                        FontSize="10"
+                        FontWeight="SemiBold"
+                        Opacity="0.25"
+                        CharacterSpacing="120"
+                      />
+                      <FontIcon x:Name="SortTypeIcon" Glyph="" FontSize="8" Opacity="0.3" />
+                    </StackPanel>
+                  </Button>
+                  <Button
+                    Grid.Column="4"
+                    Click="OnSortByDate"
+                    Style="{StaticResource SortHeaderBtn}"
+                    HorizontalContentAlignment="Right"
+                  >
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <TextBlock
+                        Text="MODIFIED"
+                        FontSize="10"
+                        FontWeight="SemiBold"
+                        Opacity="0.25"
+                        CharacterSpacing="120"
+                      />
+                      <FontIcon x:Name="SortDateIcon" Glyph="" FontSize="8" Opacity="0.3" />
+                    </StackPanel>
+                  </Button>
                 </Grid>
 
-                <!-- ════════ HEALTH VIEW ════════ -->
-                <ScrollViewer x:Name="HealthView" Visibility="Collapsed" Padding="0,0,0,40">
-                    <StackPanel MaxWidth="680" Margin="56,28" Spacing="0">
-                        <StackPanel Spacing="4" Margin="0,0,0,28">
-                            <TextBlock Text="Volume Health" FontSize="28" FontWeight="Bold" Opacity="0.9"/>
-                            <TextBlock Text="Filesystem integrity and diagnostics" FontSize="13" Opacity="0.35"/>
-                        </StackPanel>
-                        <Border x:Name="HealthStatusCard" Style="{StaticResource SettingsCard}" CornerRadius="12" Margin="0,2">
-                            <StackPanel x:Name="HealthStatusContent" Spacing="8"/>
+                <ListView
+                  x:Name="FileList"
+                  Grid.Row="2"
+                  Padding="6,4"
+                  SelectionMode="Extended"
+                  DoubleTapped="OnFileDoubleTapped"
+                  SelectionChanged="OnFileSelectionChanged"
+                  KeyDown="OnFileListKeyDown"
+                  CanDragItems="True"
+                  DragItemsStarting="OnDragStarting"
+                >
+                  <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                      <Setter Property="Margin" Value="0,1,0,1" />
+                      <Setter Property="CornerRadius" Value="8" />
+                      <Setter Property="Padding" Value="0" />
+                    </Style>
+                  </ListView.ItemContainerStyle>
+                  <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="local:FileItem">
+                      <Grid Padding="8,7" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="36" />
+                          <ColumnDefinition Width="*" />
+                          <ColumnDefinition Width="80" />
+                          <ColumnDefinition Width="100" />
+                          <ColumnDefinition Width="140" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                          Width="30"
+                          Height="30"
+                          CornerRadius="8"
+                          Background="{x:Bind IconBackground}"
+                        >
+                          <FontIcon
+                            Glyph="{x:Bind Icon}"
+                            FontSize="14"
+                            Foreground="{x:Bind IconForeground}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                          />
                         </Border>
-                        <TextBlock Text="Volume Details" Style="{StaticResource SettingsSectionHeader}"/>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="12" Margin="0,2">
-                            <StackPanel x:Name="HealthVolumeDetails" Spacing="6"/>
-                        </Border>
-                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,16,0,0">
-                            <Button Content="Refresh" Click="OnRefreshHealth" CornerRadius="6"/>
-                            <Button Content="Export Report" Click="OnExportHealthReport" CornerRadius="6"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                          <TextBlock Text="{x:Bind Name}" FontSize="13" />
+                          <TextBlock
+                            Text="{x:Bind PreviewText}"
+                            FontSize="10"
+                            Opacity="0.22"
+                            TextTrimming="CharacterEllipsis"
+                            MaxLines="1"
+                            Visibility="{x:Bind PreviewVisibility}"
+                            FontFamily="Cascadia Code,Consolas"
+                          />
                         </StackPanel>
-                    </StackPanel>
-                </ScrollViewer>
+                        <TextBlock
+                          Grid.Column="2"
+                          Text="{x:Bind SizeText}"
+                          Opacity="0.35"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Center"
+                          FontSize="12"
+                          FontFamily="Cascadia Code,Consolas"
+                        />
+                        <TextBlock
+                          Grid.Column="3"
+                          Text="{x:Bind TypeText}"
+                          Opacity="0.25"
+                          VerticalAlignment="Center"
+                          FontSize="11"
+                          Margin="12,0,0,0"
+                          TextTrimming="CharacterEllipsis"
+                        />
+                        <TextBlock
+                          Grid.Column="4"
+                          Text="{x:Bind DateText}"
+                          Opacity="0.25"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Center"
+                          FontSize="11"
+                          FontFamily="Cascadia Code,Consolas"
+                        />
+                      </Grid>
+                    </DataTemplate>
+                  </ListView.ItemTemplate>
+                  <ListView.ContextFlyout>
+                    <MenuFlyout>
+                      <MenuFlyoutItem Text="Open" Click="OnContextOpen">
+                        <MenuFlyoutItem.Icon>
+                          <FontIcon Glyph="&#xE8E5;" />
+                        </MenuFlyoutItem.Icon>
+                      </MenuFlyoutItem>
+                      <MenuFlyoutItem Text="Export" Click="OnExportFile">
+                        <MenuFlyoutItem.Icon>
+                          <FontIcon Glyph="&#xEDE1;" />
+                        </MenuFlyoutItem.Icon>
+                      </MenuFlyoutItem>
+                      <MenuFlyoutItem Text="Rename" Click="OnRename">
+                        <MenuFlyoutItem.Icon>
+                          <FontIcon Glyph="&#xE8AC;" />
+                        </MenuFlyoutItem.Icon>
+                      </MenuFlyoutItem>
+                      <MenuFlyoutSeparator />
+                      <MenuFlyoutItem Text="Inspect Inode" Click="OnInodeInspector">
+                        <MenuFlyoutItem.Icon>
+                          <FontIcon Glyph="&#xE946;" />
+                        </MenuFlyoutItem.Icon>
+                      </MenuFlyoutItem>
+                      <MenuFlyoutItem Text="Bookmark Path" Click="OnAddBookmarkFromContext">
+                        <MenuFlyoutItem.Icon>
+                          <FontIcon Glyph="&#xE728;" />
+                        </MenuFlyoutItem.Icon>
+                      </MenuFlyoutItem>
+                      <MenuFlyoutSeparator />
+                      <MenuFlyoutItem Text="Delete" Click="OnDelete">
+                        <MenuFlyoutItem.Icon>
+                          <FontIcon Glyph="&#xE74D;" Foreground="#EF4444" />
+                        </MenuFlyoutItem.Icon>
+                      </MenuFlyoutItem>
+                    </MenuFlyout>
+                  </ListView.ContextFlyout>
+                </ListView>
 
-                <!-- ════════ SETTINGS VIEW ════════ -->
-                <ScrollViewer x:Name="SettingsView" Visibility="Collapsed" Padding="0,0,0,40">
-                    <StackPanel MaxWidth="680" Margin="56,28" Spacing="0">
-                        <StackPanel Spacing="4" Margin="0,0,0,28">
-                            <TextBlock Text="Settings" FontSize="28" FontWeight="Bold" Opacity="0.9"/>
-                            <TextBlock Text="Configure preferences for AXFS Explorer" FontSize="13" Opacity="0.35"/>
-                        </StackPanel>
-                        <TextBlock Text="Appearance" Style="{StaticResource SettingsSectionHeader}"/>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="10,10,0,0" Margin="0,2,0,0" BorderThickness="1,1,1,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="App theme" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Select which app theme to display" FontSize="12" Opacity="0.45"/>
-                                </StackPanel>
-                                <ComboBox x:Name="ThemeCombo" Grid.Column="1" Width="180" SelectionChanged="OnThemeComboChanged">
-                                    <ComboBoxItem Content="Use system setting" Tag="System"/>
-                                    <ComboBoxItem Content="Light" Tag="Light"/>
-                                    <ComboBoxItem Content="Dark" Tag="Dark"/>
-                                </ComboBox>
-                            </Grid>
-                        </Border>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="0,0,10,10" BorderThickness="1">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="Window size" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Choose a preset window size" FontSize="12" Opacity="0.45"/>
-                                </StackPanel>
-                                <ComboBox x:Name="WindowSizeCombo" Grid.Column="1" Width="180" SelectionChanged="OnWindowSizeChanged">
-                                    <ComboBoxItem Content="Compact (900 × 550)" Tag="compact"/>
-                                    <ComboBoxItem Content="Default (1200 × 750)" Tag="default"/>
-                                    <ComboBoxItem Content="Large (1500 × 900)" Tag="large"/>
-                                </ComboBox>
-                            </Grid>
-                        </Border>
-                        <TextBlock Text="Sounds" Style="{StaticResource SettingsSectionHeader}"/>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="10,10,0,0" Margin="0,2,0,0" BorderThickness="1,1,1,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="Master volume" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Overall volume for all sounds" FontSize="12" Opacity="0.45"/>
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <Slider x:Name="MasterVolumeSlider" Width="140" Minimum="0" Maximum="100" Value="80" ValueChanged="OnMasterVolumeChanged"/>
-                                    <Button x:Name="MasterMuteBtn" Style="{StaticResource MuteButton}" Click="OnMasterMuteToggle">
-                                        <FontIcon x:Name="MasterMuteIcon" Glyph="&#xE995;" FontSize="14"/>
-                                    </Button>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="0" BorderThickness="1,0,1,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="General sounds" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Floppy insert/eject, HDD access, ambient" FontSize="12" Opacity="0.45"/>
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <ToggleSwitch x:Name="GeneralSoundsToggle" IsOn="True" Toggled="OnSoundSettingToggled"/>
-                                    <Button x:Name="GeneralMuteBtn" Style="{StaticResource MuteButton}" Click="OnGeneralMuteToggle">
-                                        <FontIcon x:Name="GeneralMuteIcon" Glyph="&#xE995;" FontSize="14"/>
-                                    </Button>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="0,0,10,10" BorderThickness="1">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="Beep sounds" FontWeight="SemiBold"/>
-                                    <TextBlock Text="System beep tones (boot, error)" FontSize="12" Opacity="0.45"/>
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <ToggleSwitch x:Name="BeepSoundsToggle" IsOn="True" Toggled="OnSoundSettingToggled"/>
-                                    <Button x:Name="BeepMuteBtn" Style="{StaticResource MuteButton}" Click="OnBeepMuteToggle">
-                                        <FontIcon x:Name="BeepMuteIcon" Glyph="&#xE995;" FontSize="14"/>
-                                    </Button>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        <TextBlock Text="File Explorer" Style="{StaticResource SettingsSectionHeader}"/>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="10,10,0,0" Margin="0,2,0,0" BorderThickness="1,1,1,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="Confirm before delete" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Show a confirmation dialog before deleting files" FontSize="12" Opacity="0.45"/>
-                                </StackPanel>
-                                <ToggleSwitch x:Name="ConfirmDeleteToggle" Grid.Column="1" IsOn="True" Toggled="OnSettingToggled"/>
-                            </Grid>
-                        </Border>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="0,0,10,10" BorderThickness="1">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="Auto-save" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Automatically save changes after file operations" FontSize="12" Opacity="0.45"/>
-                                </StackPanel>
-                                <ToggleSwitch x:Name="AutoSaveToggle" Grid.Column="1" IsOn="True" Toggled="OnSettingToggled"/>
-                            </Grid>
-                        </Border>
-                        <TextBlock Text="Code Editor" Style="{StaticResource SettingsSectionHeader}"/>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="10,10,0,0" Margin="0,2,0,0" BorderThickness="1,1,1,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="Lua syntax highlighting" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Color keywords, strings, comments in Lua files" FontSize="12" Opacity="0.45"/>
-                                </StackPanel>
-                                <ToggleSwitch x:Name="SyntaxHighlightToggle" Grid.Column="1" IsOn="True" Toggled="OnEditorSettingToggled"/>
-                            </Grid>
-                        </Border>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="0" BorderThickness="1,0,1,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="Line numbers" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Show line numbers in file preview" FontSize="12" Opacity="0.45"/>
-                                </StackPanel>
-                                <ToggleSwitch x:Name="LineNumbersToggle" Grid.Column="1" IsOn="True" Toggled="OnEditorSettingToggled"/>
-                            </Grid>
-                        </Border>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="0" BorderThickness="1,0,1,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="Editor font size" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Font size for code preview and editing" FontSize="12" Opacity="0.45"/>
-                                </StackPanel>
-                                <NumberBox x:Name="EditorFontSizeBox" Grid.Column="1" Width="120" Value="13" Minimum="9" Maximum="24" SpinButtonPlacementMode="Compact" ValueChanged="OnEditorFontSizeChanged"/>
-                            </Grid>
-                        </Border>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="0,0,10,10" BorderThickness="1">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="Lua Language Server" FontWeight="SemiBold"/>
-                                        <Border CornerRadius="4" Padding="6,2">
-                                            <Border.Background>
-                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                    <GradientStop Color="#FF7C5CE7" Offset="0"/>
-                                                    <GradientStop Color="#FF3B82F6" Offset="1"/>
-                                                </LinearGradientBrush>
-                                            </Border.Background>
-                                            <TextBlock Text="PREVIEW" FontSize="9" Foreground="White" FontWeight="Bold"/>
-                                        </Border>
-                                    </StackPanel>
-                                    <TextBlock Text="Enable experimental diagnostics via lua-language-server" FontSize="12" Opacity="0.45" TextWrapping="Wrap"/>
-                                </StackPanel>
-                                <ToggleSwitch x:Name="LuaLspToggle" Grid.Column="1" IsOn="False" Toggled="OnEditorSettingToggled"/>
-                            </Grid>
-                        </Border>
-                        <TextBlock Text="Disk Defaults" Style="{StaticResource SettingsSectionHeader}"/>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="10,10,0,0" Margin="0,2,0,0" BorderThickness="1,1,1,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="Default volume label" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Label used when creating new disk images" FontSize="12" Opacity="0.45"/>
-                                </StackPanel>
-                                <TextBox x:Name="DefaultLabelBox" Grid.Column="1" Width="180" Text="AxisFS" MaxLength="16" TextChanged="OnSettingTextChanged"/>
-                            </Grid>
-                        </Border>
-                        <Border Style="{StaticResource SettingsCard}" CornerRadius="0,0,10,10" BorderThickness="1">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="Default image size" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Size in KB for new disk images" FontSize="12" Opacity="0.45"/>
-                                </StackPanel>
-                                <NumberBox x:Name="DefaultSizeBox" Grid.Column="1" Width="180" Value="512" Minimum="64" Maximum="65536" SpinButtonPlacementMode="Compact" ValueChanged="OnSettingNumberChanged"/>
-                            </Grid>
-                        </Border>
-                        <TextBlock Text="About" Style="{StaticResource SettingsSectionHeader}"/>
-                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="24,22" Margin="0,2" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                            <StackPanel Spacing="18">
-                                <Grid ColumnSpacing="18">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Border Width="56" Height="56" CornerRadius="14">
-                                        <Border.Background>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                <GradientStop Color="#FF7C5CE7" Offset="0"/>
-                                                <GradientStop Color="#FF3B82F6" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Border.Background>
-                                        <FontIcon Glyph="&#xEDA2;" FontSize="24" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
-                                        <TextBlock Text="AXFS Explorer" FontSize="18" FontWeight="Bold"/>
-                                        <TextBlock Text="Version 4.0.0 — Feature Update" FontSize="12" Opacity="0.50"/>
-                                        <TextBlock Text="AxisOS Disk Image Tool" FontSize="11" Opacity="0.25"/>
-                                    </StackPanel>
-                                </Grid>
-                                <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="-4,0"/>
-                                <TextBlock TextWrapping="Wrap" FontSize="13" Opacity="0.50" LineHeight="22">sex</TextBlock>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Button Content="Reset all settings" Click="OnResetSettings" CornerRadius="6"/>
-                                    <Button Content="Show diagnostics" Click="OnShowDiagnostics" CornerRadius="6"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-                        <Border Height="48"/>
+                <!-- Welcome state -->
+                <Grid x:Name="WelcomeState" Grid.Row="2" Visibility="Visible">
+                  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+                    <Canvas Width="120" Height="120" HorizontalAlignment="Center">
+                      <Border
+                        x:Name="FloatingDiskIcon"
+                        Width="88"
+                        Height="88"
+                        CornerRadius="44"
+                        Canvas.Left="16"
+                        Canvas.Top="16"
+                      >
+                        <Border.Background>
+                          <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#0C7C5CE7" Offset="0" />
+                            <GradientStop Color="#0C3B82F6" Offset="1" />
+                          </LinearGradientBrush>
+                        </Border.Background>
+                        <FontIcon
+                          Glyph="&#xEDA2;"
+                          FontSize="36"
+                          Opacity="0.30"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                        />
+                      </Border>
+                      <Border
+                        x:Name="OrbitDot1"
+                        Width="7"
+                        Height="7"
+                        CornerRadius="4"
+                        Canvas.Left="56"
+                        Canvas.Top="2"
+                      >
+                        <Border.Background>
+                          <SolidColorBrush Color="#FF7C5CE7" Opacity="0.40" />
+                        </Border.Background>
+                      </Border>
+                      <Border
+                        x:Name="OrbitDot2"
+                        Width="5"
+                        Height="5"
+                        CornerRadius="3"
+                        Canvas.Left="100"
+                        Canvas.Top="60"
+                      >
+                        <Border.Background>
+                          <SolidColorBrush Color="#FF3B82F6" Opacity="0.20" />
+                        </Border.Background>
+                      </Border>
+                    </Canvas>
+                    <StackPanel Spacing="6" HorizontalAlignment="Center">
+                      <TextBlock
+                        Text="Welcome to AXFS Explorer"
+                        HorizontalAlignment="Center"
+                        FontSize="22"
+                        FontWeight="Bold"
+                        Opacity="0.85"
+                      />
+                      <TextBlock
+                        Text="Open or create an AxisOS disk image to get started"
+                        HorizontalAlignment="Center"
+                        FontSize="13"
+                        Opacity="0.30"
+                      />
                     </StackPanel>
+                    <StackPanel
+                      Orientation="Horizontal"
+                      Spacing="12"
+                      HorizontalAlignment="Center"
+                      Margin="0,4,0,0"
+                    >
+                      <Button Click="OnOpenImage" Padding="28,11">
+                        <Button.Style>
+                          <Style TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+                            <Setter Property="CornerRadius" Value="8" />
+                          </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <FontIcon Glyph="&#xE838;" FontSize="14" />
+                          <TextBlock Text="Open Image" FontWeight="SemiBold" />
+                        </StackPanel>
+                      </Button>
+                      <Button Click="OnNewImage" Padding="28,11" CornerRadius="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <FontIcon Glyph="&#xE710;" FontSize="14" />
+                          <TextBlock Text="Create New" />
+                        </StackPanel>
+                      </Button>
+                    </StackPanel>
+                    <!-- Recent files -->
+                    <StackPanel
+                      x:Name="RecentFilesPanel"
+                      Visibility="Collapsed"
+                      HorizontalAlignment="Center"
+                      Margin="0,16,0,0"
+                      Spacing="6"
+                    >
+                      <TextBlock
+                        Text="RECENT FILES"
+                        FontSize="10"
+                        FontWeight="SemiBold"
+                        Opacity="0.20"
+                        CharacterSpacing="180"
+                        HorizontalAlignment="Center"
+                      />
+                      <StackPanel x:Name="RecentFilesList" Spacing="3" />
+                    </StackPanel>
+                    <StackPanel
+                      x:Name="ShortcutHints"
+                      Orientation="Horizontal"
+                      Spacing="18"
+                      HorizontalAlignment="Center"
+                      Margin="0,12,0,0"
+                      Opacity="0"
+                    >
+                      <StackPanel Orientation="Horizontal" Spacing="5">
+                        <Border
+                          Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                          CornerRadius="5"
+                          Padding="7,3"
+                          MinWidth="24"
+                          HorizontalAlignment="Center"
+                        >
+                          <TextBlock
+                            Text="Ctrl+O"
+                            FontSize="10"
+                            FontWeight="SemiBold"
+                            HorizontalAlignment="Center"
+                            Opacity="0.40"
+                            FontFamily="Cascadia Code,Consolas"
+                          />
+                        </Border>
+                        <TextBlock
+                          Text="Open"
+                          FontSize="10"
+                          Opacity="0.20"
+                          VerticalAlignment="Center"
+                        />
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="5">
+                        <Border
+                          Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                          CornerRadius="5"
+                          Padding="7,3"
+                        >
+                          <TextBlock
+                            Text="Ctrl+Shift+P"
+                            FontSize="10"
+                            FontWeight="SemiBold"
+                            Opacity="0.40"
+                            FontFamily="Cascadia Code,Consolas"
+                          />
+                        </Border>
+                        <TextBlock
+                          Text="Commands"
+                          FontSize="10"
+                          Opacity="0.20"
+                          VerticalAlignment="Center"
+                        />
+                      </StackPanel>
+                    </StackPanel>
+                  </StackPanel>
+                </Grid>
+
+                <StackPanel
+                  x:Name="EmptyDirState"
+                  Grid.Row="2"
+                  VerticalAlignment="Center"
+                  HorizontalAlignment="Center"
+                  Spacing="10"
+                  Opacity="0.15"
+                  Visibility="Collapsed"
+                >
+                  <FontIcon Glyph="&#xF12B;" FontSize="44" HorizontalAlignment="Center" />
+                  <TextBlock
+                    Text="This folder is empty"
+                    HorizontalAlignment="Center"
+                    FontSize="14"
+                    FontWeight="SemiBold"
+                  />
+                  <TextBlock
+                    Text="Drop files here or use Import"
+                    HorizontalAlignment="Center"
+                    FontSize="12"
+                  />
+                </StackPanel>
+              </Grid>
+
+              <!-- Preview divider -->
+              <Border
+                x:Name="PreviewDivider"
+                Grid.Column="3"
+                Width="0"
+                Background="{ThemeResource DividerStrokeColorDefaultBrush}"
+              />
+
+              <!-- ═══ PREVIEW PANE ═══ -->
+              <Grid x:Name="PreviewPane" Grid.Column="4" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border
+                  Padding="12,8"
+                  Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                  BorderThickness="0,0,0,1"
+                >
+                  <Grid>
+                    <TextBlock
+                      x:Name="PreviewTitle"
+                      Text="Preview"
+                      FontSize="12"
+                      FontWeight="SemiBold"
+                      Opacity="0.5"
+                      VerticalAlignment="Center"
+                    />
+                    <Button
+                      HorizontalAlignment="Right"
+                      Click="OnTogglePreviewPane"
+                      Style="{StaticResource MuteButton}"
+                      Padding="4,2"
+                    >
+                      <FontIcon Glyph="&#xE711;" FontSize="10" />
+                    </Button>
+                  </Grid>
+                </Border>
+                <ScrollViewer
+                  Grid.Row="1"
+                  x:Name="PreviewScroll"
+                  Padding="8"
+                  HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Auto"
+                >
+                  <TextBlock
+                    x:Name="PreviewContentText"
+                    Text="Select a file to preview"
+                    FontSize="12"
+                    Opacity="0.3"
+                    TextWrapping="Wrap"
+                  />
                 </ScrollViewer>
+              </Grid>
             </Grid>
-        </NavigationView>
-    </Grid>
+
+            <!-- ═══ ACTIVITY LOG ═══ -->
+            <Grid x:Name="ActivityLogPanel" Grid.Row="1" Visibility="Collapsed" Height="180">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+              </Grid.RowDefinitions>
+              <Border
+                Padding="12,4"
+                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0"
+              >
+                <Grid>
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE9F9;" FontSize="11" Opacity="0.3" />
+                    <TextBlock
+                      Text="Activity Log"
+                      FontSize="11"
+                      FontWeight="SemiBold"
+                      Opacity="0.4"
+                    />
+                  </StackPanel>
+                  <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="2">
+                    <Button
+                      Click="OnClearActivityLog"
+                      Style="{StaticResource MuteButton}"
+                      Padding="4,2"
+                      ToolTipService.ToolTip="Clear log"
+                    >
+                      <FontIcon Glyph="&#xE74D;" FontSize="10" Opacity="0.3" />
+                    </Button>
+                    <Button
+                      Click="OnToggleActivityLog"
+                      Style="{StaticResource MuteButton}"
+                      Padding="4,2"
+                    >
+                      <FontIcon Glyph="&#xE711;" FontSize="10" Opacity="0.3" />
+                    </Button>
+                  </StackPanel>
+                </Grid>
+              </Border>
+              <ScrollViewer Grid.Row="1" x:Name="ActivityLogScroll">
+                <TextBlock
+                  x:Name="ActivityLogText"
+                  FontFamily="Cascadia Code,Consolas"
+                  FontSize="11"
+                  Padding="12,4"
+                  IsTextSelectionEnabled="True"
+                  TextWrapping="NoWrap"
+                  Opacity="0.6"
+                />
+              </ScrollViewer>
+            </Grid>
+          </Grid>
+
+          <!-- STATUS BAR -->
+          <Border
+            Grid.Row="5"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,1,0,0"
+          >
+            <Grid Padding="16,4,16,4" ColumnSpacing="12">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <StackPanel
+                x:Name="ActivityLeds"
+                Orientation="Horizontal"
+                Spacing="3"
+                VerticalAlignment="Center"
+              >
+                <Border
+                  x:Name="Led1"
+                  Width="3"
+                  Height="3"
+                  CornerRadius="2"
+                  Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                />
+                <Border
+                  x:Name="Led2"
+                  Width="3"
+                  Height="3"
+                  CornerRadius="2"
+                  Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                />
+                <Border
+                  x:Name="Led3"
+                  Width="3"
+                  Height="3"
+                  CornerRadius="2"
+                  Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                />
+                <Border
+                  x:Name="Led4"
+                  Width="3"
+                  Height="3"
+                  CornerRadius="2"
+                  Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                />
+                <Border
+                  x:Name="Led5"
+                  Width="3"
+                  Height="3"
+                  CornerRadius="2"
+                  Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                />
+              </StackPanel>
+              <TextBlock
+                x:Name="StatusText"
+                Grid.Column="1"
+                Text="Ready"
+                FontSize="11"
+                Opacity="0.40"
+                VerticalAlignment="Center"
+              />
+              <TextBlock
+                x:Name="ItemCountText"
+                Grid.Column="2"
+                FontSize="11"
+                Opacity="0.30"
+                VerticalAlignment="Center"
+                FontFamily="Cascadia Code,Consolas"
+              />
+              <TextBlock
+                x:Name="SelectionText"
+                Grid.Column="3"
+                FontSize="11"
+                Opacity="0.30"
+                VerticalAlignment="Center"
+              />
+              <Grid
+                Grid.Column="4"
+                VerticalAlignment="Center"
+                ToolTipService.ToolTip="No image loaded"
+              >
+                <Border
+                  x:Name="ConnectionPulse"
+                  Width="12"
+                  Height="12"
+                  CornerRadius="6"
+                  Opacity="0.15"
+                />
+                <Border
+                  x:Name="ConnectionDot"
+                  Width="7"
+                  Height="7"
+                  CornerRadius="4"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                />
+              </Grid>
+              <TextBlock
+                x:Name="PerfText"
+                Grid.Column="5"
+                FontSize="9"
+                Opacity="0.12"
+                VerticalAlignment="Center"
+                FontFamily="Cascadia Code,Consolas"
+              />
+            </Grid>
+          </Border>
+        </Grid>
+
+        <!-- ════════ HEALTH VIEW ════════ -->
+        <ScrollViewer x:Name="HealthView" Visibility="Collapsed" Padding="0,0,0,40">
+          <StackPanel MaxWidth="680" Margin="56,28" Spacing="0">
+            <StackPanel Spacing="4" Margin="0,0,0,28">
+              <TextBlock Text="Volume Health" FontSize="28" FontWeight="Bold" Opacity="0.9" />
+              <TextBlock Text="Filesystem integrity and diagnostics" FontSize="13" Opacity="0.35" />
+            </StackPanel>
+            <Border
+              x:Name="HealthStatusCard"
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="12"
+              Margin="0,2"
+            >
+              <StackPanel x:Name="HealthStatusContent" Spacing="8" />
+            </Border>
+            <TextBlock Text="Volume Details" Style="{StaticResource SettingsSectionHeader}" />
+            <Border Style="{StaticResource SettingsCard}" CornerRadius="12" Margin="0,2">
+              <StackPanel x:Name="HealthVolumeDetails" Spacing="6" />
+            </Border>
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,16,0,0">
+              <Button Content="Refresh" Click="OnRefreshHealth" CornerRadius="6" />
+              <Button Content="Export Report" Click="OnExportHealthReport" CornerRadius="6" />
+            </StackPanel>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- ════════ SETTINGS VIEW ════════ -->
+        <ScrollViewer x:Name="SettingsView" Visibility="Collapsed" Padding="0,0,0,40">
+          <StackPanel MaxWidth="680" Margin="56,28" Spacing="0">
+            <StackPanel Spacing="4" Margin="0,0,0,28">
+              <TextBlock Text="Settings" FontSize="28" FontWeight="Bold" Opacity="0.9" />
+              <TextBlock
+                Text="Configure preferences for AXFS Explorer"
+                FontSize="13"
+                Opacity="0.35"
+              />
+            </StackPanel>
+            <TextBlock Text="Appearance" Style="{StaticResource SettingsSectionHeader}" />
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="10,10,0,0"
+              Margin="0,2,0,0"
+              BorderThickness="1,1,1,0"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <TextBlock Text="App theme" FontWeight="SemiBold" />
+                  <TextBlock
+                    Text="Select which app theme to display"
+                    FontSize="12"
+                    Opacity="0.45"
+                  />
+                </StackPanel>
+                <ComboBox
+                  x:Name="ThemeCombo"
+                  Grid.Column="1"
+                  Width="180"
+                  SelectionChanged="OnThemeComboChanged"
+                >
+                  <ComboBoxItem Content="Use system setting" Tag="System" />
+                  <ComboBoxItem Content="Light" Tag="Light" />
+                  <ComboBoxItem Content="Dark" Tag="Dark" />
+                </ComboBox>
+              </Grid>
+            </Border>
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="0,0,10,10"
+              BorderThickness="1"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <TextBlock Text="Window size" FontWeight="SemiBold" />
+                  <TextBlock Text="Choose a preset window size" FontSize="12" Opacity="0.45" />
+                </StackPanel>
+                <ComboBox
+                  x:Name="WindowSizeCombo"
+                  Grid.Column="1"
+                  Width="180"
+                  SelectionChanged="OnWindowSizeChanged"
+                >
+                  <ComboBoxItem Content="Compact (900 × 550)" Tag="compact" />
+                  <ComboBoxItem Content="Default (1200 × 750)" Tag="default" />
+                  <ComboBoxItem Content="Large (1500 × 900)" Tag="large" />
+                </ComboBox>
+              </Grid>
+            </Border>
+            <TextBlock Text="Sounds" Style="{StaticResource SettingsSectionHeader}" />
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="10,10,0,0"
+              Margin="0,2,0,0"
+              BorderThickness="1,1,1,0"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <TextBlock Text="Master volume" FontWeight="SemiBold" />
+                  <TextBlock Text="Overall volume for all sounds" FontSize="12" Opacity="0.45" />
+                </StackPanel>
+                <StackPanel
+                  Grid.Column="1"
+                  Orientation="Horizontal"
+                  Spacing="8"
+                  VerticalAlignment="Center"
+                >
+                  <Slider
+                    x:Name="MasterVolumeSlider"
+                    Width="140"
+                    Minimum="0"
+                    Maximum="100"
+                    Value="80"
+                    ValueChanged="OnMasterVolumeChanged"
+                  />
+                  <Button
+                    x:Name="MasterMuteBtn"
+                    Style="{StaticResource MuteButton}"
+                    Click="OnMasterMuteToggle"
+                  >
+                    <FontIcon x:Name="MasterMuteIcon" Glyph="&#xE995;" FontSize="14" />
+                  </Button>
+                </StackPanel>
+              </Grid>
+            </Border>
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="0"
+              BorderThickness="1,0,1,0"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <TextBlock Text="General sounds" FontWeight="SemiBold" />
+                  <TextBlock
+                    Text="Floppy insert/eject, HDD access, ambient"
+                    FontSize="12"
+                    Opacity="0.45"
+                  />
+                </StackPanel>
+                <StackPanel
+                  Grid.Column="1"
+                  Orientation="Horizontal"
+                  Spacing="8"
+                  VerticalAlignment="Center"
+                >
+                  <ToggleSwitch
+                    x:Name="GeneralSoundsToggle"
+                    IsOn="True"
+                    Toggled="OnSoundSettingToggled"
+                  />
+                  <Button
+                    x:Name="GeneralMuteBtn"
+                    Style="{StaticResource MuteButton}"
+                    Click="OnGeneralMuteToggle"
+                  >
+                    <FontIcon x:Name="GeneralMuteIcon" Glyph="&#xE995;" FontSize="14" />
+                  </Button>
+                </StackPanel>
+              </Grid>
+            </Border>
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="0,0,10,10"
+              BorderThickness="1"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <TextBlock Text="Beep sounds" FontWeight="SemiBold" />
+                  <TextBlock Text="System beep tones (boot, error)" FontSize="12" Opacity="0.45" />
+                </StackPanel>
+                <StackPanel
+                  Grid.Column="1"
+                  Orientation="Horizontal"
+                  Spacing="8"
+                  VerticalAlignment="Center"
+                >
+                  <ToggleSwitch
+                    x:Name="BeepSoundsToggle"
+                    IsOn="True"
+                    Toggled="OnSoundSettingToggled"
+                  />
+                  <Button
+                    x:Name="BeepMuteBtn"
+                    Style="{StaticResource MuteButton}"
+                    Click="OnBeepMuteToggle"
+                  >
+                    <FontIcon x:Name="BeepMuteIcon" Glyph="&#xE995;" FontSize="14" />
+                  </Button>
+                </StackPanel>
+              </Grid>
+            </Border>
+            <TextBlock Text="File Explorer" Style="{StaticResource SettingsSectionHeader}" />
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="10,10,0,0"
+              Margin="0,2,0,0"
+              BorderThickness="1,1,1,0"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <TextBlock Text="Confirm before delete" FontWeight="SemiBold" />
+                  <TextBlock
+                    Text="Show a confirmation dialog before deleting files"
+                    FontSize="12"
+                    Opacity="0.45"
+                  />
+                </StackPanel>
+                <ToggleSwitch
+                  x:Name="ConfirmDeleteToggle"
+                  Grid.Column="1"
+                  IsOn="True"
+                  Toggled="OnSettingToggled"
+                />
+              </Grid>
+            </Border>
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="0,0,10,10"
+              BorderThickness="1"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <TextBlock Text="Auto-save" FontWeight="SemiBold" />
+                  <TextBlock
+                    Text="Automatically save changes after file operations"
+                    FontSize="12"
+                    Opacity="0.45"
+                  />
+                </StackPanel>
+                <ToggleSwitch
+                  x:Name="AutoSaveToggle"
+                  Grid.Column="1"
+                  IsOn="True"
+                  Toggled="OnSettingToggled"
+                />
+              </Grid>
+            </Border>
+            <TextBlock Text="Code Editor" Style="{StaticResource SettingsSectionHeader}" />
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="10,10,0,0"
+              Margin="0,2,0,0"
+              BorderThickness="1,1,1,0"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <TextBlock Text="Lua syntax highlighting" FontWeight="SemiBold" />
+                  <TextBlock
+                    Text="Color keywords, strings, comments in Lua files"
+                    FontSize="12"
+                    Opacity="0.45"
+                  />
+                </StackPanel>
+                <ToggleSwitch
+                  x:Name="SyntaxHighlightToggle"
+                  Grid.Column="1"
+                  IsOn="True"
+                  Toggled="OnEditorSettingToggled"
+                />
+              </Grid>
+            </Border>
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="0"
+              BorderThickness="1,0,1,0"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <TextBlock Text="Line numbers" FontWeight="SemiBold" />
+                  <TextBlock
+                    Text="Show line numbers in file preview"
+                    FontSize="12"
+                    Opacity="0.45"
+                  />
+                </StackPanel>
+                <ToggleSwitch
+                  x:Name="LineNumbersToggle"
+                  Grid.Column="1"
+                  IsOn="True"
+                  Toggled="OnEditorSettingToggled"
+                />
+              </Grid>
+            </Border>
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="0"
+              BorderThickness="1,0,1,0"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <TextBlock Text="Editor font size" FontWeight="SemiBold" />
+                  <TextBlock
+                    Text="Font size for code preview and editing"
+                    FontSize="12"
+                    Opacity="0.45"
+                  />
+                </StackPanel>
+                <NumberBox
+                  x:Name="EditorFontSizeBox"
+                  Grid.Column="1"
+                  Width="120"
+                  Value="13"
+                  Minimum="9"
+                  Maximum="24"
+                  SpinButtonPlacementMode="Compact"
+                  ValueChanged="OnEditorFontSizeChanged"
+                />
+              </Grid>
+            </Border>
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="0,0,10,10"
+              BorderThickness="1"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Lua Language Server" FontWeight="SemiBold" />
+                    <Border CornerRadius="4" Padding="6,2">
+                      <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                          <GradientStop Color="#FF7C5CE7" Offset="0" />
+                          <GradientStop Color="#FF3B82F6" Offset="1" />
+                        </LinearGradientBrush>
+                      </Border.Background>
+                      <TextBlock Text="PREVIEW" FontSize="9" Foreground="White" FontWeight="Bold" />
+                    </Border>
+                  </StackPanel>
+                  <TextBlock
+                    Text="Enable experimental diagnostics via lua-language-server"
+                    FontSize="12"
+                    Opacity="0.45"
+                    TextWrapping="Wrap"
+                  />
+                </StackPanel>
+                <ToggleSwitch
+                  x:Name="LuaLspToggle"
+                  Grid.Column="1"
+                  IsOn="False"
+                  Toggled="OnEditorSettingToggled"
+                />
+              </Grid>
+            </Border>
+            <TextBlock Text="Disk Defaults" Style="{StaticResource SettingsSectionHeader}" />
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="10,10,0,0"
+              Margin="0,2,0,0"
+              BorderThickness="1,1,1,0"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <TextBlock Text="Default volume label" FontWeight="SemiBold" />
+                  <TextBlock
+                    Text="Label used when creating new disk images"
+                    FontSize="12"
+                    Opacity="0.45"
+                  />
+                </StackPanel>
+                <TextBox
+                  x:Name="DefaultLabelBox"
+                  Grid.Column="1"
+                  Width="180"
+                  Text="AxisFS"
+                  MaxLength="16"
+                  TextChanged="OnSettingTextChanged"
+                />
+              </Grid>
+            </Border>
+            <Border
+              Style="{StaticResource SettingsCard}"
+              CornerRadius="0,0,10,10"
+              BorderThickness="1"
+            >
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                  <TextBlock Text="Default image size" FontWeight="SemiBold" />
+                  <TextBlock Text="Size in KB for new disk images" FontSize="12" Opacity="0.45" />
+                </StackPanel>
+                <NumberBox
+                  x:Name="DefaultSizeBox"
+                  Grid.Column="1"
+                  Width="180"
+                  Value="512"
+                  Minimum="64"
+                  Maximum="65536"
+                  SpinButtonPlacementMode="Compact"
+                  ValueChanged="OnSettingNumberChanged"
+                />
+              </Grid>
+            </Border>
+            <TextBlock Text="About" Style="{StaticResource SettingsSectionHeader}" />
+            <Border
+              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+              CornerRadius="12"
+              Padding="24,22"
+              Margin="0,2"
+              BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+              BorderThickness="1"
+            >
+              <StackPanel Spacing="18">
+                <Grid ColumnSpacing="18">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <Border Width="56" Height="56" CornerRadius="14">
+                    <Border.Background>
+                      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#FF7C5CE7" Offset="0" />
+                        <GradientStop Color="#FF3B82F6" Offset="1" />
+                      </LinearGradientBrush>
+                    </Border.Background>
+                    <FontIcon
+                      Glyph="&#xEDA2;"
+                      FontSize="24"
+                      Foreground="White"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                    />
+                  </Border>
+                  <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Text="AXFS Explorer" FontSize="18" FontWeight="Bold" />
+                    <TextBlock Text="Version 4.0.0 — Feature Update" FontSize="12" Opacity="0.50" />
+                    <TextBlock Text="AxisOS Disk Image Tool" FontSize="11" Opacity="0.25" />
+                  </StackPanel>
+                </Grid>
+                <Border
+                  Height="1"
+                  Background="{ThemeResource DividerStrokeColorDefaultBrush}"
+                  Margin="-4,0"
+                />
+                <TextBlock TextWrapping="Wrap" FontSize="13" Opacity="0.50" LineHeight="22"
+                  >sex</TextBlock
+                >
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Button Content="Reset all settings" Click="OnResetSettings" CornerRadius="6" />
+                  <Button Content="Show diagnostics" Click="OnShowDiagnostics" CornerRadius="6" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+            <Border Height="48" />
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
+    </NavigationView>
+  </Grid>
 </Window>
