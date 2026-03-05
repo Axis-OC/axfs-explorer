@@ -42,21 +42,12 @@ jobs:
           /p:GenerateAppxPackageOnBuild=false
           /p:DeployOnBuild=false
 
-      - name: Find output
-        if: matrix.configuration == 'Release'
-        shell: pwsh
-        run: |
-          Write-Host "=== Searching for build output ==="
-          Get-ChildItem -Path bin -Recurse -File | Select-Object -First 50 | ForEach-Object { Write-Host $_.FullName }
-
       - name: Upload artifacts
         if: matrix.configuration == 'Release'
         uses: actions/upload-artifact@v4
         with:
           name: AxfsExplorer-x64
-          path: |
-            bin/**/Release/**/
-          if-no-files-found: warn
+          path: bin/**/Release/**/
           retention-days: 30
 
   release:
