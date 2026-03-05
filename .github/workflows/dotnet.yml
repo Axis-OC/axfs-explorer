@@ -17,11 +17,6 @@ jobs:
       matrix:
         configuration: [Debug, Release]
 
-    env:
-      SOLUTION_PATH: AxfsExplorer
-      PROJECT_PATH: AxfsExplorer/AxfsExplorer.csproj
-      TARGET_PLATFORM: x64
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,37 +29,25 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Restore NuGet packages
-        run: dotnet restore ${{ env.PROJECT_PATH }} -r win-x64
+      - name: Restore
+        run: msbuild AxfsExplorer.sln /t:Restore /p:Configuration=${{ matrix.configuration }} /p:Platform=x64
 
       - name: Build
         run: >
-          dotnet build ${{ env.PROJECT_PATH }}
-          --configuration ${{ matrix.configuration }}
-          --runtime win-x64
-          --no-restore
-          -p:Platform=x64
-          -p:WindowsPackageType=None
-          -p:SelfContained=false
+          msbuild AxfsExplorer.sln
+          /p:Configuration=${{ matrix.configuration }}
+          /p:Platform=x64
+          /p:AppxBundlePlatforms=x64
+          /p:AppxBundle=Never
+          /p:UapAppxPackageBuildMode=SideloadOnly
+          /p:GenerateAppxPackageOnBuild=false
 
-      - name: Publish (Release only)
-        if: matrix.configuration == 'Release'
-        run: >
-          dotnet publish ${{ env.PROJECT_PATH }}
-          --configuration Release
-          --runtime win-x64
-          --self-contained true
-          -p:Platform=x64
-          -p:WindowsPackageType=None
-          -p:PublishSingleFile=false
-          -o ./publish
-
-      - name: Upload build artifacts
+      - name: Upload artifacts
         if: matrix.configuration == 'Release'
         uses: actions/upload-artifact@v4
         with:
-          name: AxfsExplorer-x64-Release
-          path: ./publish/
+          name: AxfsExplorer-x64
+          path: bin/x64/Release/
           retention-days: 30
 
   release:
