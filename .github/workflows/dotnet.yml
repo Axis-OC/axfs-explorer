@@ -1,0 +1,99 @@
+# .github/workflows/build.yml
+
+name: Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    env:
+      SOLUTION_PATH: AxfsExplorer
+      PROJECT_PATH: AxfsExplorer/AxfsExplorer.csproj
+      TARGET_PLATFORM: x64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore NuGet packages
+        run: dotnet restore ${{ env.PROJECT_PATH }} -r win-x64
+
+      - name: Build
+        run: >
+          dotnet build ${{ env.PROJECT_PATH }}
+          --configuration ${{ matrix.configuration }}
+          --runtime win-x64
+          --no-restore
+          -p:Platform=x64
+          -p:WindowsPackageType=None
+          -p:SelfContained=false
+
+      - name: Publish (Release only)
+        if: matrix.configuration == 'Release'
+        run: >
+          dotnet publish ${{ env.PROJECT_PATH }}
+          --configuration Release
+          --runtime win-x64
+          --self-contained true
+          -p:Platform=x64
+          -p:WindowsPackageType=None
+          -p:PublishSingleFile=false
+          -o ./publish
+
+      - name: Upload build artifacts
+        if: matrix.configuration == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AxfsExplorer-x64-Release
+          path: ./publish/
+          retention-days: 30
+
+  release:
+    needs: build
+    runs-on: windows-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: AxfsExplorer-x64-Release
+          path: ./release-files/
+
+      - name: Create ZIP archive
+        run: Compress-Archive -Path ./release-files/* -DestinationPath AxfsExplorer-x64.zip
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          body: |
+            Automated build from commit ${{ github.sha }}
+            
+            **Platform:** Windows x64 (Win10/Win11)
+            **Configuration:** Release, self-contained
+          draft: false
+          prerelease: true
+          files: AxfsExplorer-x64.zip
